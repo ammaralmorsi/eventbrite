@@ -1,9 +1,11 @@
 from fastapi import APIRouter
 from fastapi import status
 from fastapi.responses import JSONResponse
-from .commons import is_unique, get_password_hash, verify_password, send_verification_email,send_forgot_password_email, encode_token, decode_token
+from .commons import is_unique, get_password_hash, verify_password, send_verification_email, send_forgot_password_email, encode_token, decode_token
 import jwt
-from .db_settings import get_db_conn, User, LoginUser
+from .db.models import User, LoginUser
+from .db.driver import get_db_conn
+
 from datetime import datetime
 
 router = APIRouter(

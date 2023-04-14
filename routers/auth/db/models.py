@@ -1,6 +1,4 @@
-from pymongo import MongoClient
 from pydantic import BaseModel
-
 
 class User(BaseModel):
     firstname: str
@@ -12,11 +10,3 @@ class User(BaseModel):
 class LoginUser(BaseModel):
     email: str
     password: str
-
-
-def get_db_conn():
-    client = MongoClient('mongodb://localhost:27017')
-    db = client['EventBrite']
-    return db
-
-

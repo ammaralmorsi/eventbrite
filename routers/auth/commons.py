@@ -1,4 +1,4 @@
-from .db_settings import get_db_conn
+from .db.driver import get_db_conn
 from passlib.context import CryptContext
 import smtplib
 from email.mime.text import MIMEText
