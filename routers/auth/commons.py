@@ -20,13 +20,11 @@ def is_unique(email):
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
-
 def get_password_hash(password):
     return pwd_context.hash(password)
 
-
 def encode_token(email):
-    encoded_token = jwt.encode({"email": email, "exp": datetime.utcnow() + timedelta(hours=1)}, secret_key, algorithm="HS256")
+    encoded_token = jwt.encode({"email": email, "exp": datetime.utcnow() + timedelta(hours=24)}, secret_key, algorithm="HS256")
     return encoded_token
 
 def decode_token(token):
