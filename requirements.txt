@@ -1,4 +1,4 @@
-fastapi~=0.95.0
+fastapi[all]~=0.95.0
 pymongo~=4.3.3
 pydantic~=1.10.7
 starlette~=0.26.1
