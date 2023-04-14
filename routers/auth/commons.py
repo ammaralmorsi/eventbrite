@@ -33,6 +33,7 @@ def decode_token(token):
     expiration_time = datetime.fromtimestamp(payload["exp"])
     return email, expiration_time
 
+
 def send_verification_email(email: str, token: str):
     # Create a message object
     message = MIMEMultipart()
@@ -42,7 +43,7 @@ def send_verification_email(email: str, token: str):
     # Calculate token expiration date (e.g. 1 hour)
     expiration_date = datetime.utcnow() + timedelta(hours=24)
     # Create the verification link with the token
-    verification_link = f"https://http://127.0.0.1:8000/verify?token={token}"
+    verification_link = f"http://127.0.0.1:8000/auth/verify?token={token}"
     html = f"<p>Thank you for signing up! Please click the following link to verify your email address:</p><p><a href='{verification_link}'>{verification_link}</a></p><p>The link will expire on {expiration_date}.</p>"
     # Attach the HTML content to the message
     message.attach(MIMEText(html, "html"))
