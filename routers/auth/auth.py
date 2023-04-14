@@ -1,8 +1,9 @@
 from fastapi import APIRouter
-from fastapi import FastAPI, HTTPException, status
+from fastapi import status
 from fastapi.responses import JSONResponse
-from .db_settings import get_db_conn, User, is_unique, get_password_hash, send_verification_email
+from .commons import is_unique, get_password_hash,verify_password, send_verification_email, encode_token, decode_token
 import jwt
+from .db_settings import get_db_conn, User, LoginUser
 from datetime import datetime, timedelta
 
 router = APIRouter()
@@ -11,20 +12,21 @@ router = APIRouter()
 async def signup(user: User):
     db = get_db_conn()
     if not is_unique(user.email):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="email is already registered")
+        return JSONResponse(content={"message": "email is already registered"}, status_code=status.HTTP_400_BAD_REQUEST)
     hashed_password = get_password_hash(user.password)
     user.password = hashed_password
-    user.is_verified = False # Set is_verified flag to False
+    user.is_verified = False  # Set is_verified flag to False
     db["User"].insert_one(user.dict())
-    send_verification_email(user.email, jwt.encode({"email": user.email, "exp": datetime.utcnow() + timedelta(hours=1)}, "secret_key", algorithm="HS256"))
-    return JSONResponse(content={"message": "Please verify your email before logging in"}, status_code=status.HTTP_200_OK)
+    token = encode_token(user.email)
+    send_verification_email(user.email,token)
+    return JSONResponse(content={"message": "Please verify your email before logging in"},
+                        status_code=status.HTTP_200_OK)
+
 
 @router.get("/verify")
 async def verify_email(token: str):
     try:
-        payload = jwt.decode(token, "secret_key", algorithms=["HS256"])
-        email = payload["email"]
-        expiration_time = datetime.fromtimestamp(payload["exp"])
+        email, expiration_time = decode_token(token)
         if datetime.utcnow() > expiration_time:
             return JSONResponse(content={"message": "Token has expired"}, status_code=status.HTTP_400_BAD_REQUEST)
         db = get_db_conn()
@@ -35,4 +37,22 @@ async def verify_email(token: str):
             return JSONResponse(content={"message": "Email not found"}, status_code=status.HTTP_404_NOT_FOUND)
     except jwt.exceptions.DecodeError:
         return JSONResponse(content={"message": "Invalid token"}, status_code=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+@router.post("/login")
+async def login(user: LoginUser):
+    if user.email == "" or user.password == "":
+        return JSONResponse(content={"message": "please, provide both email and password"}, status_code=status.HTTP_400_BAD_REQUEST)
+    db = get_db_conn()
+    logged_user = db["User"].find_one({"email": user.email})
+    if not logged_user:
+        return JSONResponse(content={"message": "email is not registered"}, status_code=status.HTTP_401_UNAUTHORIZED)
+
+    if not verify_password(user.password, logged_user["password"]):
+        return JSONResponse(content={"message": "wrong password"}, status_code=status.HTTP_401_UNAUTHORIZED)
+    encoded_token = encode_token(user.email)
+    return JSONResponse(content={"token": encoded_token}, status_code=status.HTTP_200_OK)
+
 
