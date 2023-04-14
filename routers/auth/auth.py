@@ -6,7 +6,10 @@ import jwt
 from .db_settings import get_db_conn, User, LoginUser
 from datetime import datetime
 
-router = APIRouter(prefix="/auth")
+router = APIRouter(
+    prefix="/auth",
+    tags=["auth"]
+)
 
 
 @router.post("/signup")
