@@ -40,12 +40,27 @@ def send_verification_email(email: str, token: str):
     message["To"] = email
     message["Subject"] = "Verify your email address"
     # Calculate token expiration date (e.g. 1 hour)
-    expiration_date = datetime.utcnow() + timedelta(hours=1)
+    expiration_date = datetime.utcnow() + timedelta(hours=24)
     # Create the verification link with the token
-    verification_link = f"https://example.com/verify?token={token}"
-    # Create the HTML content of the email
+    verification_link = f"https://http://127.0.0.1:8000/verify?token={token}"
     html = f"<p>Thank you for signing up! Please click the following link to verify your email address:</p><p><a href='{verification_link}'>{verification_link}</a></p><p>The link will expire on {expiration_date}.</p>"
     # Attach the HTML content to the message
+    message.attach(MIMEText(html, "html"))
+    # Create a connection to the SMTP server
+    with smtplib.SMTP("smtp.gmail.com", 587) as server:
+        server.starttls()
+        server.login("a7medmaher309@gmail.com", "gsrbcwieakzdxyvk")
+        server.sendmail("your_email@example.com", email, message.as_string())
+
+
+def send_forgot_password_email(email, token):
+    message = MIMEMultipart()
+    message["From"] = "a7medmaher309@gmail.com"
+    message["To"] = email
+    message["Subject"] = "Verify your email address"
+    expiration_date = datetime.utcnow() + timedelta(hours=24)
+    verification_link = f"https://example.com/verify?token={token}"
+    html = f"<p>Click the following link to reset your password:</p><p><a href='{verification_link}'>{verification_link}</a></p><p>The link will expire on {expiration_date}.</p>"
     message.attach(MIMEText(html, "html"))
     # Create a connection to the SMTP server
     with smtplib.SMTP("smtp.gmail.com", 587) as server:

@@ -1,12 +1,12 @@
 from fastapi import APIRouter
 from fastapi import status
 from fastapi.responses import JSONResponse
-from .commons import is_unique, get_password_hash, verify_password, send_verification_email, encode_token, decode_token
+from .commons import is_unique, get_password_hash, verify_password, send_verification_email,send_forgot_password_email, encode_token, decode_token
 import jwt
 from .db_settings import get_db_conn, User, LoginUser
 from datetime import datetime
 
-router = APIRouter()
+router = APIRouter(prefix="/auth")
 
 
 @router.post("/signup")
@@ -56,12 +56,27 @@ async def login(user: LoginUser):
     return JSONResponse(content={"token": encoded_token}, status_code=status.HTTP_200_OK)
 
 
-@router.post("/forgot-password")
-async def forgot_password(user: LoginUser):
-    if user.email == "" or user.password == "":
-        return JSONResponse(content={"message": "please, provide both email and password"}, status_code=status.HTTP_400_BAD_REQUEST)
-    db = get_db_conn()
-    logged_user = db["User"].update_one({"email": user.email}, {"$set": {"password": user.password}})
-    if logged_user.modified_count == 0:
-        return JSONResponse(content={"message": "Email is not found"}, status_code=status.HTTP_404_NOT_FOUND)
-    return JSONResponse(content={"message": "password updated successfully"}, status_code=status.HTTP_200_OK)
+# @router.post("/forgot-password")
+# async def forgot_password(email):
+#     if email == "":
+#         return JSONResponse(content={"message": "please, provide both email and password"}, status_code=status.HTTP_400_BAD_REQUEST)
+#     db = get_db_conn()
+#     logged_user = db["User"].find_one({"email": email})
+#     if not logged_user:
+#         return JSONResponse(content={"message": "Email is not found"}, status_code=status.HTTP_404_NOT_FOUND)
+#     send_forgot_password_email(email)
+#
+# @router.get("/reset-password")
+# async def reset_password(token: str):
+#     try:
+#         email, expiration_time = decode_token(token)
+#         if datetime.utcnow() > expiration_time:
+#             return JSONResponse(content={"message": "Token has expired"}, status_code=status.HTTP_400_BAD_REQUEST)
+#         db = get_db_conn()
+#         result = db["User"].update_one({"email": email}, {"$set": {"is_verified": True}})
+#         if result.modified_count == 1:
+#             return JSONResponse(content={"message": "Email verified successfully"}, status_code=status.HTTP_200_OK)
+#         else:
+#             return JSONResponse(content={"message": "Email not found"}, status_code=status.HTTP_404_NOT_FOUND)
+#     except jwt.exceptions.DecodeError:
+#         return JSONResponse(content={"message": "Invalid token"}, status_code=status.HTTP_400_BAD_REQUEST)
