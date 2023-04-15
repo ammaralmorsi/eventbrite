@@ -28,13 +28,19 @@ conda activate eventbrite
 ```bash
 pip install -r requirements.txt
 ```
-
-4. From inside the virtual environment, demonstrate your ability to run the Python script from the command-line:
+4. Add the following environment variables:
+    
+```bash
+export MONGO_URI="your mongo connection string"
+export MONGO_DB="your database name"
+```
+5. From inside the virtual environment, demonstrate your ability to run the Python script from the command-line:
 
 ```bash
 uvicorn main:app --reload
 ```
-5. Navigate through docs to learn more about the API with the following link [docs](http://127.0.0.1:8000/docs)
+6. Navigate through docs to learn more about the API with the following link [docs](http://127.0.0.1:8000/docs)
+
 
 
 ## Contributors
