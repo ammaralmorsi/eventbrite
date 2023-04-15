@@ -31,8 +31,8 @@ pip install -r requirements.txt
 4. Add the following environment variables:
     
 ```bash
-export MONGO_URI="your mongo connection string"
-export MONGO_DB="your database name"
+export MONGO_URI=<your mongo connection string>
+export MONGO_DB=<your database name>
 ```
 5. From inside the virtual environment, demonstrate your ability to run the Python script from the command-line:
 
