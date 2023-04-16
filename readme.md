@@ -34,12 +34,18 @@ pip install -r requirements.txt
 export MONGO_URI=<your mongo connection string>
 export MONGO_DB=<your database name>
 ```
-5. From inside the virtual environment, demonstrate your ability to run the Python script from the command-line:
+5. Add the following environment variables:
+    
+```bash
+export EMAIL=<The email needed to send verification>
+export PASSWORD=<its password>
+```
+6. From inside the virtual environment, demonstrate your ability to run the Python script from the command-line:
 
 ```bash
 uvicorn main:app --reload
 ```
-6. Navigate through docs to learn more about the API with the following link [docs](http://127.0.0.1:8000/docs)
+7. Navigate through docs to learn more about the API with the following link [docs](http://127.0.0.1:8000/docs)
 
 
 
