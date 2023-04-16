@@ -6,6 +6,7 @@ from email.mime.multipart import MIMEMultipart
 import jwt
 import secrets
 from datetime import datetime, timedelta
+import os
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 secret_key = secrets.token_hex(32)
@@ -93,7 +94,7 @@ def send_verification_email(email: str, token: str):
     """
     # Create a message object
     message = MIMEMultipart()
-    message["From"] = "a7medmaher309@gmail.com"
+    message["From"] = os.environ.get("EMAIL")
     message["To"] = email
     message["Subject"] = "Verify your email address"
     # Calculate token expiration date (e.g. 1 hour)
@@ -106,8 +107,8 @@ def send_verification_email(email: str, token: str):
     # Create a connection to the SMTP server
     with smtplib.SMTP("smtp.gmail.com", 587) as server:
         server.starttls()
-        server.login("a7medmaher309@gmail.com", "gsrbcwieakzdxyvk")
-        server.sendmail("your_email@example.com", email, message.as_string())
+        server.login(os.environ.get("EMAIL"), os.environ.get("PASSWORD"))
+        server.sendmail(os.environ.get("EMAIL"), email, message.as_string())
 
 
 def send_forgot_password_email(email, token):
@@ -125,7 +126,7 @@ def send_forgot_password_email(email, token):
         None.
     """
     message = MIMEMultipart()
-    message["From"] = "a7medmaher309@gmail.com"
+    message["From"] = os.environ.get("EMAIL")
     message["To"] = email
     message["Subject"] = "Verify your email address"
     expiration_date = datetime.utcnow() + timedelta(hours=24)
@@ -135,7 +136,7 @@ def send_forgot_password_email(email, token):
     # Create a connection to the SMTP server
     with smtplib.SMTP("smtp.gmail.com", 587) as server:
         server.starttls()
-        server.login("a7medmaher309@gmail.com", "gsrbcwieakzdxyvk")
+        server.login(os.environ.get("EMAIL"), os.environ.get("PASSWORD"))
         # Send the message
-        server.sendmail("your_email@example.com", email, message.as_string())
+        server.sendmail(os.environ.get("EMAIL"), email, message.as_string())
 
