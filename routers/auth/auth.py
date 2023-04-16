@@ -165,7 +165,7 @@ async def change_password(token: str, request: ChangePasswordRequest):
         if not logged_user:
             return JSONResponse(content={"message": "Email not found"}, status_code=status.HTTP_404_NOT_FOUND)
         # update user password in database
-        new_password = request.new_password
+        new_password = get_password_hash(request.new_password)
         db["User"].update_one({"email": email}, {"$set": {"password": new_password}})
         # return success message
         return JSONResponse(content={"message": "Password updated successfully"}, status_code=status.HTTP_200_OK)

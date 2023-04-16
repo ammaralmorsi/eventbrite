@@ -93,6 +93,8 @@ def send_verification_email(email: str, token: str):
         None.
     """
     # Create a message object
+    source_email = os.environ.get("EVENTBRITE_EMAIL")
+    source_password = os.environ.get("EVENTBRITE_PASSWORD")
     message = MIMEMultipart()
     message["From"] = os.environ.get("EMAIL")
     message["To"] = email
@@ -107,8 +109,8 @@ def send_verification_email(email: str, token: str):
     # Create a connection to the SMTP server
     with smtplib.SMTP("smtp.gmail.com", 587) as server:
         server.starttls()
-        server.login(os.environ.get("EMAIL"), os.environ.get("PASSWORD"))
-        server.sendmail(os.environ.get("EMAIL"), email, message.as_string())
+        server.login(source_email, source_password)
+        server.sendmail(source_email, email, message.as_string())
 
 
 def send_forgot_password_email(email, token):
@@ -125,10 +127,12 @@ def send_forgot_password_email(email, token):
     Returns:
         None.
     """
+    source_email = os.environ.get("EVENTBRITE_EMAIL")
+    source_password = os.environ.get("EVENTBRITE_PASSWORD")
     message = MIMEMultipart()
     message["From"] = os.environ.get("EMAIL")
     message["To"] = email
-    message["Subject"] = "Verify your email address"
+    message["Subject"] = "Reset your password"
     expiration_date = datetime.utcnow() + timedelta(hours=24)
     verification_link = f"http://127.0.0.1:8000/auth/reset-password?token={token}"
     html = f"<p>Click the following link to reset your password:</p><p><a href='{verification_link}'>{verification_link}</a></p><p>The link will expire on {expiration_date}.</p>"
@@ -136,7 +140,7 @@ def send_forgot_password_email(email, token):
     # Create a connection to the SMTP server
     with smtplib.SMTP("smtp.gmail.com", 587) as server:
         server.starttls()
-        server.login(os.environ.get("EMAIL"), os.environ.get("PASSWORD"))
+        server.login(source_email, source_password)
         # Send the message
-        server.sendmail(os.environ.get("EMAIL"), email, message.as_string())
+        server.sendmail(source_email, email, message.as_string())
 
