@@ -6,6 +6,7 @@ from email.mime.multipart import MIMEMultipart
 import jwt
 import secrets
 from datetime import datetime, timedelta
+import os
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 secret_key = secrets.token_hex(32)
@@ -92,8 +93,10 @@ def send_verification_email(email: str, token: str):
         None.
     """
     # Create a message object
+    source_email = os.environ.get("EVENTBRITE_EMAIL")
+    source_password = os.environ.get("EVENTBRITE_PASSWORD")
     message = MIMEMultipart()
-    message["From"] = "a7medmaher309@gmail.com"
+    message["From"] = os.environ.get("EMAIL")
     message["To"] = email
     message["Subject"] = "Verify your email address"
     # Calculate token expiration date (e.g. 1 hour)
@@ -106,8 +109,8 @@ def send_verification_email(email: str, token: str):
     # Create a connection to the SMTP server
     with smtplib.SMTP("smtp.gmail.com", 587) as server:
         server.starttls()
-        server.login("a7medmaher309@gmail.com", "gsrbcwieakzdxyvk")
-        server.sendmail("your_email@example.com", email, message.as_string())
+        server.login(source_email, source_password)
+        server.sendmail(source_email, email, message.as_string())
 
 
 def send_forgot_password_email(email, token):
@@ -124,10 +127,12 @@ def send_forgot_password_email(email, token):
     Returns:
         None.
     """
+    source_email = os.environ.get("EVENTBRITE_EMAIL")
+    source_password = os.environ.get("EVENTBRITE_PASSWORD")
     message = MIMEMultipart()
-    message["From"] = "a7medmaher309@gmail.com"
+    message["From"] = os.environ.get("EMAIL")
     message["To"] = email
-    message["Subject"] = "Verify your email address"
+    message["Subject"] = "Reset your password"
     expiration_date = datetime.utcnow() + timedelta(hours=24)
     verification_link = f"http://127.0.0.1:8000/auth/reset-password?token={token}"
     html = f"<p>Click the following link to reset your password:</p><p><a href='{verification_link}'>{verification_link}</a></p><p>The link will expire on {expiration_date}.</p>"
@@ -135,7 +140,7 @@ def send_forgot_password_email(email, token):
     # Create a connection to the SMTP server
     with smtplib.SMTP("smtp.gmail.com", 587) as server:
         server.starttls()
-        server.login("a7medmaher309@gmail.com", "gsrbcwieakzdxyvk")
+        server.login(source_email, source_password)
         # Send the message
-        server.sendmail("your_email@example.com", email, message.as_string())
+        server.sendmail(source_email, email, message.as_string())
 
