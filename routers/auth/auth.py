@@ -95,7 +95,9 @@ async def login(user: LoginUser):
     if not logged_user["is_verified"]:
         send_verification_email(logged_user["email"], encoded_token)
         return JSONResponse(content={"message": "email is not verified"}, status_code=status.HTTP_401_UNAUTHORIZED)
-    return JSONResponse(content={"token": encoded_token}, status_code=status.HTTP_200_OK)
+    return JSONResponse(content={"token": encoded_token, "email": logged_user["email"],
+                                 "firstname": logged_user["firstname"], "lastname": logged_user["lastname"],
+                                 "avatar": logged_user["avatar_url"]}, status_code=status.HTTP_200_OK)
 
 
 @router.get("/forgot-password")

@@ -22,6 +22,7 @@ class User(BaseModel):
     email: str
     password: str
     is_verified: bool = False
+    avatar_url:str
 
 class LoginUser(BaseModel):
     """
