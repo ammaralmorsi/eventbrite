@@ -171,3 +171,12 @@ async def change_password(token: str, request: ChangePasswordRequest):
         return JSONResponse(content={"message": "Password updated successfully"}, status_code=status.HTTP_200_OK)
     except jwt.exceptions.DecodeError:
         return JSONResponse(content={"message": "Invalid token"}, status_code=status.HTTP_400_BAD_REQUEST)
+
+
+@router.post("/check-email")
+async def check_email(email):
+    db = get_db_conn()
+    logged_user = db["User"].find_one({"email": email})
+    if not logged_user:
+        return False
+    return True
