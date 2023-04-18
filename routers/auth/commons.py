@@ -81,66 +81,48 @@ def decode_token(token):
     return email, expiration_time
 
 
-def send_verification_email(email: str, token: str):
+def send_email(email: str, token: str, email_type: int):
     """
     Send a verification email to the specified email address with a verification link containing the given token.
 
     Parameters:
         email (str): Email address to send the verification email to.
         token (str): JSON Web Token to include in the verification link.
+        email_type: integer define whether the email will be signup verification email (1) or forgot password email (2)
 
     Returns:
-        None.
-    """
-    # Create a message object
-    source_email = os.environ.get("EVENTBRITE_EMAIL")
-    source_password = os.environ.get("EVENTBRITE_PASSWORD")
-    message = MIMEMultipart()
-    message["From"] = os.environ.get("EMAIL")
-    message["To"] = email
-    message["Subject"] = "Verify your email address"
-    # Calculate token expiration date (e.g. 1 hour)
-    expiration_date = datetime.utcnow() + timedelta(hours=24)
-    # Create the verification link with the token
-    verification_link = f"http://127.0.0.1:8000/auth/verify?token={token}"
-    html = f"<p>Thank you for signing up! Please click the following link to verify your email address:</p><p><a href='{verification_link}'>{verification_link}</a></p><p>The link will expire on {expiration_date}.</p>"
-    # Attach the HTML content to the message
-    message.attach(MIMEText(html, "html"))
-    # Create a connection to the SMTP server
-    with smtplib.SMTP("smtp.gmail.com", 587) as server:
-        server.starttls()
-        server.login(source_email, source_password)
-        server.sendmail(source_email, email, message.as_string())
-
-
-def send_forgot_password_email(email, token):
-    """
-    Sends an email to the specified email address containing a link to reset the user's password.
-
-    Args:
-        email (str): The email address of the user.
-        token (str): The token generated for the password reset request.
-
-    Raises:
-        smtplib.SMTPException: If the SMTP server encounters an error.
-
-    Returns:
-        None.
+        1- code tell whether an error is happened
+        2- body describes the behaviour
     """
     source_email = os.environ.get("EVENTBRITE_EMAIL")
     source_password = os.environ.get("EVENTBRITE_PASSWORD")
     message = MIMEMultipart()
     message["From"] = os.environ.get("EMAIL")
     message["To"] = email
-    message["Subject"] = "Reset your password"
+    message["Subject"] = "Verification email"
     expiration_date = datetime.utcnow() + timedelta(hours=24)
-    verification_link = f"http://127.0.0.1:8000/auth/reset-password?token={token}"
-    html = f"<p>Click the following link to reset your password:</p><p><a href='{verification_link}'>{verification_link}</a></p><p>The link will expire on {expiration_date}.</p>"
+    if email_type == 1:
+        verification_link = f"http://127.0.0.1:8000/auth/verify?token={token}"
+        html = f"<p>Thank you for signing up! Please click the following link to verify your email address:</p><p><a href='{verification_link}'>{verification_link}</a></p><p>The link will expire on {expiration_date}.</p>"
+    else:
+        verification_link = f"http://127.0.0.1:8000/auth/reset-password?token={token}"
+        html = f"<p>Click the following link to reset your password:</p><p><a href='{verification_link}'>{verification_link}</a></p><p>The link will expire on {expiration_date}.</p>"
     message.attach(MIMEText(html, "html"))
-    # Create a connection to the SMTP server
     with smtplib.SMTP("smtp.gmail.com", 587) as server:
-        server.starttls()
-        server.login(source_email, source_password)
-        # Send the message
-        server.sendmail(source_email, email, message.as_string())
+        try:
+            server.starttls()
+            server.login(source_email, source_password)
+            server.sendmail(source_email, email, message.as_string())
+        except smtplib.SMTPRecipientsRefused as e:
+            body = "Recipient email address is invalid."
+            return -1, body
+        except smtplib.SMTPAuthenticationError as e:
+            body = "SMTP authentication error."
+            return -1, body
+        except Exception as e:
+            body = "An error occurred while sending the email."
+            return -1, body
+        else:
+            body = "Successful Request"
+            return 1, body
 
