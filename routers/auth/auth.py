@@ -6,9 +6,14 @@ from fastapi import APIRouter
 from fastapi import status
 from fastapi.responses import JSONResponse
 from starlette.responses import RedirectResponse
-
-from .commons import is_unique, get_password_hash, verify_password, send_verification_email, send_forgot_password_email, encode_token, decode_token
 import jwt
+
+from .commons import is_unique
+from .commons import get_password_hash
+from .commons import verify_password
+from .commons import send_email
+from .commons import encode_token
+from .commons import decode_token
 from .db.models import User, LoginUser, ChangePasswordRequest
 from .db.driver import get_db_conn
 
@@ -35,15 +40,15 @@ async def signup(user: User):
     db = get_db_conn()
     if not is_unique(user.email):
         return JSONResponse(content={"message": "email is already registered"}, status_code=status.HTTP_400_BAD_REQUEST)
+    token = encode_token(user.email)
+    send_email_value, body = send_email(user.email, token, 1)
+    if send_email_value == -1:
+        return JSONResponse(content={"message": body}, status_code=status.HTTP_400_BAD_REQUEST)
     hashed_password = get_password_hash(user.password)
     user.password = hashed_password
-    user.is_verified = False  # Set is_verified flag to False
     db["User"].insert_one(user.dict())
-    token = encode_token(user.email)
-    send_verification_email(user.email, token)
-    return JSONResponse(content={"message": "Please verify your email before logging in"},
+    return JSONResponse(content={"message": "Please verify your email before your login"},
                         status_code=status.HTTP_200_OK)
-
 
 @router.get("/verify")
 async def verify_email(token: str):
@@ -93,7 +98,7 @@ async def login(user: LoginUser):
         return JSONResponse(content={"message": "wrong password"}, status_code=status.HTTP_401_UNAUTHORIZED)
     encoded_token = encode_token(user.email)
     if not logged_user["is_verified"]:
-        send_verification_email(logged_user["email"], encoded_token)
+        send_email(logged_user["email"], encoded_token, 1)
         return JSONResponse(content={"message": "email is not verified"}, status_code=status.HTTP_401_UNAUTHORIZED)
     return JSONResponse(content={"token": encoded_token, "email": logged_user["email"],
                                  "firstname": logged_user["firstname"], "lastname": logged_user["lastname"],
@@ -118,7 +123,8 @@ async def forgot_password(email):
     if not logged_user:
         return JSONResponse(content={"message": "Email is not found"}, status_code=status.HTTP_404_NOT_FOUND)
     encoded_token = encode_token(email)
-    send_forgot_password_email(email, encoded_token)
+    send_email(email, encoded_token, 2)
+    return JSONResponse(content={"message": "Sent a verification email"}, status_code=status.HTTP_200_OK)
 
 
 @router.get("/reset-password")
@@ -138,10 +144,10 @@ async def reset_password(token: str):
             return JSONResponse(content={"message": "Token has expired"}, status_code=status.HTTP_400_BAD_REQUEST)
         db = get_db_conn()
         logged_user = db["User"].find_one({"email": email})
-        if logged_user:
-            return RedirectResponse(url=f"/auth/change-password?token={token}")
-        else:
+        if not logged_user:
             return JSONResponse(content={"message": "Email not found"}, status_code=status.HTTP_404_NOT_FOUND)
+        else:
+            return RedirectResponse(url=f"/auth/change-password?token={token}")
     except jwt.exceptions.DecodeError:
         return JSONResponse(content={"message": "Invalid token"}, status_code=status.HTTP_400_BAD_REQUEST)
 
