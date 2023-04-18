@@ -5,3 +5,4 @@ starlette~=0.26.1
 setuptools~=65.6.3
 pyjwt~=2.6.0
 passlib[bcrypt]~=1.7.4
+fastapi-pagination~=0.12.2
