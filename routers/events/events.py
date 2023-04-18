@@ -148,3 +148,31 @@ async def delete_event_by_id(event_id: str):
         return PlainTextResponse("Event deleted successfully", status_code=200)
     else:
         return PlainTextResponse("Event deletion failed", status_code=500)
+
+
+@router.get(
+    "/location/{event_location}",
+    summary="Get events by location",
+    description="This endpoint allows you to get events by location.",
+    tags=["events"],
+    responses={
+        200: {"description": "Events retrieved successfully"},
+    },
+)
+async def get_event_by_location(event_location: str) -> List[EventDB]:
+    """
+    Get events by location.
+
+    Args:
+        event_location (str): The location of the events to be retrieved.
+
+    Returns:
+        List[EventDB]: A list of events that match the given location.
+    """
+    events = db_handler.find_by_location({"location": event_location})
+    result = []
+    for event in events:
+        event_out = EventDB(**event)
+        event_out.id = str(event["_id"])
+        result.append(event_out)
+    return result

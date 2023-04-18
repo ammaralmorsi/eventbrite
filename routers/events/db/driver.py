@@ -118,3 +118,16 @@ class EventDriver:
         """
         return self.collection.delete_one(query)
 
+    def find_by_location(self, query):
+        """
+        Find documents in the events collection based on a location query.
+
+        Args:
+            query (dict): Query containing the location to filter documents in the events collection.
+
+        Returns:
+            pymongo.cursor.Cursor: Cursor to iterate over the documents returned by the location query.
+        """
+        pattern = re.compile(".*{}.*".format(re.escape(query["location"])), re.IGNORECASE)
+        query = {"location.location": {"$regex": pattern}, "location.type": "venue"}
+        return self.find(query)
