@@ -16,6 +16,20 @@ class TicketDriver:
         self.db = self.client[os.environ.get("MONGO_DB")]
         self.collection = self.db['events']
 
+    def insert(self, event_id, tickets):
+        """
+        Inserts a document into the MongoDB collection.
+
+        Args:
+            event_id: The ID of the event to create tickets for.
+            tickets: A list of tickets to be created.
+
+        Returns:
+            The result of the insertion operation.
+
+        """
+        return self.collection.insert_one({"_id": event_id, "tickets": tickets})
+
     def find_by_event_id(self, query):
         """
         Finds a document in the MongoDB collection by a given query.
@@ -55,4 +69,3 @@ class TicketDriver:
 
         """
         return self.collection.update_one(query, data)
-    
