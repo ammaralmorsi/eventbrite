@@ -135,6 +135,7 @@ class EventDriver:
         query = {"location.location": {"$regex": pattern}, "location.type": "venue"}
         return self.find(query)
 
+
     def get_events_sorted_by_date(self):
         """
         Find documents in the events collection sorted by date.

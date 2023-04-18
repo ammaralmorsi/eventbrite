@@ -180,6 +180,7 @@ async def get_event_by_location(event_location: str) -> List[EventDB]:
     return result
 
 
+
 @router.get(
     "/date",
     summary="Get events sorted by date",
