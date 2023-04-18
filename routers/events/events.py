@@ -4,6 +4,8 @@ from .db.driver import EventDriver
 from fastapi.responses import PlainTextResponse
 from bson import ObjectId
 from typing import List
+from fastapi_pagination import Page, paginate
+
 
 router = APIRouter(
     prefix="/events",
@@ -176,3 +178,29 @@ async def get_event_by_location(event_location: str) -> List[EventDB]:
         event_out.id = str(event["_id"])
         result.append(event_out)
     return result
+
+
+@router.get(
+    "/date",
+    summary="Get events sorted by date",
+    description="This endpoint allows you to get events sorted by date.",
+    tags=["events"],
+    responses={
+        200: {"description": "Events retrieved successfully"},
+    },
+    response_model=Page[EventDB],
+)
+async def get_event_by_date():
+    """
+    Get events sorted by date.
+
+    Returns:
+        List[EventDB]: A list of events sorted by date.
+    """
+    events = db_handler.get_events_sorted_by_date()
+    result = []
+    for event in events:
+        event_out = EventDB(**event)
+        event_out.id = str(event["_id"])
+        result.append(event_out)
+    return paginate(result)
