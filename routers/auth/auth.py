@@ -99,16 +99,11 @@ async def reset_password(token: str):
 async def change_password(token: str, request: models.UserInForgotPassword):
     try:
         email, expiration_time = token_handler.decode_token(token)
-        if datetime.utcnow() > expiration_time:
-            return JSONResponse(content={"message": "Token has expired"}, status_code=status.HTTP_400_BAD_REQUEST)
-        logged_user = db["User"].find_one({"email": email})
-        if not logged_user:
-            return JSONResponse(content={"message": "Email not found"}, status_code=status.HTTP_404_NOT_FOUND)
         new_password = password_handler.get_password_hash(request.password)
         db["User"].update_one({"email": email}, {"$set": {"password": new_password}})
         return JSONResponse(content={"message": "Password updated successfully"}, status_code=status.HTTP_200_OK)
     except jwt.exceptions.DecodeError:
-        return JSONResponse(content={"message": "Invalid token"}, status_code=status.HTTP_400_BAD_REQUEST)
+        return JSONResponse(content={"message": "Change password failed"}, status_code=status.HTTP_400_BAD_REQUEST)
 
 
 @router.post("/check-email")
