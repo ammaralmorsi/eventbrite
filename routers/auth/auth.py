@@ -1,7 +1,3 @@
-"""
-This module contains the API router for user authentication.
-"""
-
 from fastapi import APIRouter
 from fastapi import status
 from fastapi.responses import JSONResponse
@@ -9,7 +5,7 @@ from starlette.responses import RedirectResponse
 import jwt
 
 from .commons import is_unique
-from .db.models import User, LoginUser, ChangePasswordRequest
+from .db import models
 from .db.driver import get_db_conn
 from .password_handler import PasswordHandler
 from .token_handler import TokenHandler
@@ -28,8 +24,9 @@ token_handler = TokenHandler()
 email_handler = EmailHandler()
 db = get_db_conn()
 
+
 @router.post("/signup")
-async def signup(user: User):
+async def signup(user: models.UserInSignup):
     if not is_unique(user.email):
         return JSONResponse(content={"message": "email is already registered"}, status_code=status.HTTP_400_BAD_REQUEST)
     token = token_handler.encode_token(user.email)
@@ -38,9 +35,10 @@ async def signup(user: User):
         return JSONResponse(content={"message": body}, status_code=status.HTTP_400_BAD_REQUEST)
     hashed_password = password_handler.get_password_hash(user.password)
     user.password = hashed_password
-    db["User"].insert_one(user.dict())
+    db["User"].insert_one(models.UserDB(**user.dict()))
     return JSONResponse(content={"message": "Please verify your email before your login"},
                         status_code=status.HTTP_200_OK)
+
 
 @router.get("/verify")
 async def verify_email(token: str):
@@ -58,7 +56,7 @@ async def verify_email(token: str):
 
 
 @router.post("/login")
-async def login(user: LoginUser):
+async def login(user: models.UserInLogin):
     logged_user = db["User"].find_one({"email": user.email})
     if not logged_user:
         return JSONResponse(content={"message": "email is not registered"}, status_code=status.HTTP_401_UNAUTHORIZED)
@@ -69,12 +67,10 @@ async def login(user: LoginUser):
     if not logged_user["is_verified"]:
         email_handler.send_email(logged_user["email"], encoded_token, EmailType.SIGNUP_VERIFICATION)
         return JSONResponse(content={"message": "email is not verified"}, status_code=status.HTTP_401_UNAUTHORIZED)
-    return JSONResponse(content={"token": encoded_token, "email": logged_user["email"],
-                                 "firstname": logged_user["firstname"], "lastname": logged_user["lastname"],
-                                 "avatar": logged_user["avatar_url"]}, status_code=status.HTTP_200_OK)
+    return models.UserOutLogin(**logged_user, token=encoded_token)
 
 
-@router.get("/forgot-password")
+@router.post("/forgot-password")
 async def forgot_password(email):
     logged_user = db["User"].find_one({"email": email})
     if not logged_user:
@@ -100,7 +96,7 @@ async def reset_password(token: str):
 
 
 @router.put("/change-password")
-async def change_password(token: str, request: ChangePasswordRequest):
+async def change_password(token: str, request: models.UserInForgotPassword):
     try:
         email, expiration_time = token_handler.decode_token(token)
         if datetime.utcnow() > expiration_time:
@@ -108,7 +104,7 @@ async def change_password(token: str, request: ChangePasswordRequest):
         logged_user = db["User"].find_one({"email": email})
         if not logged_user:
             return JSONResponse(content={"message": "Email not found"}, status_code=status.HTTP_404_NOT_FOUND)
-        new_password = password_handler.get_password_hash(request.new_password)
+        new_password = password_handler.get_password_hash(request.password)
         db["User"].update_one({"email": email}, {"$set": {"password": new_password}})
         return JSONResponse(content={"message": "Password updated successfully"}, status_code=status.HTTP_200_OK)
     except jwt.exceptions.DecodeError:
