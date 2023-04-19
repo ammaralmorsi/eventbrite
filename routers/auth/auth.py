@@ -35,7 +35,7 @@ async def signup(user: models.UserInSignup):
         return JSONResponse(content={"message": body}, status_code=status.HTTP_400_BAD_REQUEST)
     hashed_password = password_handler.get_password_hash(user.password)
     user.password = hashed_password
-    db["User"].insert_one(models.UserDB(**user.dict()))
+    db["User"].insert_one(models.UserDB(**user.dict()).dict())
     return JSONResponse(content={"message": "Please verify your email before your login"},
                         status_code=status.HTTP_200_OK)
 
