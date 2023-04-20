@@ -12,6 +12,7 @@ app = FastAPI(
     title="EventBrite",
     description="EventBrite API",
     version="1.0",
+    docs_url="/"
 )
 
 
