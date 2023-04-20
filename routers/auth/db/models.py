@@ -11,7 +11,7 @@ password_type = Annotated[str, Field(
         description="New password of the user",
     )]
 email_type = Annotated[EmailStr, Field(
-        example="user@mail.com",
+        example="user@gmail.com",
         title="Email",
         description="Email of the user",
     )]
@@ -54,8 +54,8 @@ class UserInForgotPassword(BaseModel):
 
 
 class UserDB(UserInSignup):
-    is_verified: is_verified_type
-    avatar_url: avatar_url_type
+    is_verified: is_verified_type | bool = False
+    avatar_url: avatar_url_type | str = ""
 
 
 class UserOutLogin(BaseModel):
