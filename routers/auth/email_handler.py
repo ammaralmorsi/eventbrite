@@ -2,12 +2,13 @@ import os
 
 from enum import Enum
 
+from fastapi import HTTPException
+from fastapi import status
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime
 from datetime import timedelta
-import socket
 
 
 class EmailType(Enum):
@@ -51,15 +52,9 @@ class EmailHandler:
                 server.starttls()
                 server.login(self.source_email, self.source_password)
                 server.sendmail(self.source_email, email, self.message.as_string())
-            except smtplib.SMTPRecipientsRefused as e:
-                body = "Recipient email address is invalid."
-                return -1, body
-            except smtplib.SMTPAuthenticationError as e:
-                body = "SMTP authentication error."
-                return -1, body
-            except Exception as e:
-                body = "An error occurred while sending the email."
-                return -1, body
-            else:
-                body = "Successful Request"
-                return 1, body
+            except smtplib.SMTPRecipientsRefused:
+                raise HTTPException(detail="recipient email refused.",
+                                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            except smtplib.SMTPException:
+                raise HTTPException(detail="failed to send email.",
+                                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
