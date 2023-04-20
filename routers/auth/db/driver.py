@@ -12,7 +12,8 @@ class UsersDriver:
         self.collection = self.db["users"]
 
     def create_user(self, user: UserDB):
-        return self.collection.insert_one(user.dict())
+        inserted_id = self.collection.insert_one(user.dict()).inserted_id
+        return user.dict().update({"_id": inserted_id})
 
     def set_is_verified(self, email):
         result = self.collection.update_one({"email": email}, {"$set": {"is_verified": True}})

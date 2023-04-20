@@ -5,6 +5,8 @@ from pydantic import Field
 from pydantic import EmailStr
 from pydantic import HttpUrl
 
+from bson import ObjectId
+
 password_type = Annotated[str, Field(
         example="password",
         title="New password",
@@ -64,3 +66,13 @@ class UserOutLogin(BaseModel):
     firstname: firstname_type
     lastname: lastname_type
     avatar_url: avatar_url_type
+
+
+class UserToken(BaseModel):
+    id: ObjectId = Field(default_factory=ObjectId, alias="_id")
+    email: email_type
+
+    class Config:
+        allow_population_by_field_name = True
+        arbitrary_types_allowed = True
+        json_encoders = {ObjectId: str}
