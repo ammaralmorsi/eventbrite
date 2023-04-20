@@ -15,7 +15,8 @@ class UsersDriver:
         return self.collection.insert_one(user.dict())
 
     def set_is_verified(self, email):
-        return self.collection.update_one({"email": email}, {"$set": {"is_verified": True}})
+        result = self.collection.update_one({"email": email}, {"$set": {"is_verified": True}})
+        return result.modified_count == 1
 
     def find_user(self, email):
         return self.collection.find_one({"email": email})

@@ -25,10 +25,20 @@ email_handler = EmailHandler()
 db = UsersDriver()
 
 
+def handle_exists_email(email):
+    if db.email_exists(email):
+        raise HTTPException(detail={"email already exists"}, status_code=status.HTTP_406_NOT_ACCEPTABLE)
+
+
+def handle_not_exists_email(email):
+    if not db.email_exists(email):
+        raise HTTPException(detail={"email not found"}, status_code=status.HTTP_404_NOT_FOUND)
+
+
 @router.post("/signup", status_code=status.HTTP_201_CREATED)
 async def signup(user: models.UserInSignup):
-    if not db.email_exists(user.email):
-        raise HTTPException(detail={"email is already registered"}, status_code=status.HTTP_406_NOT_ACCEPTABLE)
+    handle_exists_email(user.email)
+
     token = token_handler.encode_token(user.email)
     email_handler.send_email(user.email, token, EmailType.SIGNUP_VERIFICATION)
     hashed_password = password_handler.get_password_hash(user.password)
@@ -43,9 +53,8 @@ async def verify_email(token: str):
         email, expiration_time = token_handler.decode_token(token)
         if datetime.utcnow() > expiration_time:
             raise HTTPException(detail="token has expired", status_code=status.HTTP_401_UNAUTHORIZED)
-        result = db.set_is_verified(email)
-        if result.modified_count != 1:
-            raise HTTPException(detail="email not found", status_code=status.HTTP_404_NOT_FOUND)
+        if not db.set_is_verified(email):
+            raise HTTPException(detail="can't verify email", status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
     except jwt.exceptions.DecodeError:
         raise HTTPException(detail="invalid token", status_code=status.HTTP_401_UNAUTHORIZED)
 
@@ -54,10 +63,9 @@ async def verify_email(token: str):
 
 @router.post("/login")
 async def login(user: models.UserInLogin) -> models.UserOutLogin:
-    logged_user = db.find_user(user.email)
-    if not logged_user:
-        raise HTTPException(detail="user not found", status_code=status.HTTP_404_NOT_FOUND)
+    handle_not_exists_email(user.email)
 
+    logged_user = db.find_user(user.email)
     if not password_handler.verify_password(user.password, logged_user["password"]):
         raise HTTPException(detail="wrong password", status_code=status.HTTP_401_UNAUTHORIZED)
 
@@ -71,9 +79,8 @@ async def login(user: models.UserInLogin) -> models.UserOutLogin:
 
 @router.post("/forgot-password")
 async def forgot_password(email):
-    logged_user = db.find_user(email)
-    if not logged_user:
-        raise HTTPException(detail="user not found", status_code=status.HTTP_404_NOT_FOUND)
+    handle_not_exists_email(email)
+
     encoded_token = token_handler.encode_token(email)
     email_handler.send_email(email, encoded_token, EmailType.FORGET_PASSWORD)
     return PlainTextResponse("sent a verification email", status_code=status.HTTP_200_OK)
@@ -85,13 +92,13 @@ async def reset_password(token: str):
         email, expiration_time = token_handler.decode_token(token)
         if datetime.utcnow() > expiration_time:
             raise HTTPException(detail="token has expired", status_code=status.HTTP_401_UNAUTHORIZED)
-        logged_user = db.find_user(email)
-        if not logged_user:
-            raise HTTPException(detail="email not found", status_code=status.HTTP_404_NOT_FOUND)
-        else:
-            return RedirectResponse(url=f"/auth/change-password?token={token}")
+
+        handle_not_exists_email(email)
+
     except jwt.exceptions.DecodeError:
         raise HTTPException(detail="invalid token", status_code=status.HTTP_401_UNAUTHORIZED)
+
+    return RedirectResponse(url=f"/auth/change-password?token={token}")
 
 
 @router.put("/change-password")
@@ -107,7 +114,6 @@ async def change_password(token: str, request: models.UserInForgotPassword):
 
 @router.post("/check-email")
 async def check_email(email):
-    if not db.email_exists(email):
-        raise HTTPException(detail="email not found", status_code=status.HTTP_404)
+    handle_not_exists_email(email)
 
     return PlainTextResponse("email is available", status_code=status.HTTP_200_OK)
