@@ -16,9 +16,10 @@ class TokenHandler:
 
     def encode_token(self, user: models.UserToken):
         expiration_time = datetime.utcnow() + timedelta(hours=self.token_duration)
-        payload = {"exp": expiration_time}.update(user.dict())
-        encoded_token = jwt.encode(payload, self.secret_key, self.algorithm)
-        return encoded_token
+
+        payload = {"exp": expiration_time, "id": str(user.id), "email": user.email}
+
+        return jwt.encode(payload, self.secret_key, self.algorithm)
 
     def get_user(self, token) -> models.UserToken:
         try:

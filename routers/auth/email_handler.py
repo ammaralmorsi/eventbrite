@@ -47,14 +47,17 @@ class EmailHandler:
         self.message["To"] = email
         body = self.get_email_body(email_type, token)
         self.message.attach(MIMEText(body, "html"))
-        with smtplib.SMTP("smtp.gmail.com", 587) as server:
-            try:
-                server.starttls()
-                server.login(self.source_email, self.source_password)
-                server.sendmail(self.source_email, email, self.message.as_string())
-            except smtplib.SMTPRecipientsRefused:
-                raise HTTPException(detail="recipient email refused.",
-                                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
-            except smtplib.SMTPException:
-                raise HTTPException(detail="failed to send email.",
-                                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        try:
+            server = smtplib.SMTP("smtp.gmail.com", 587)
+            server.starttls()
+            server.login(self.source_email, self.source_password)
+            server.sendmail(self.source_email, email, self.message.as_string())
+        except smtplib.SMTPRecipientsRefused:
+            raise HTTPException(detail="recipient email refused.",
+                                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except smtplib.SMTPException:
+            raise HTTPException(detail="failed to send email.",
+                                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except AttributeError:
+            raise HTTPException(detail="no source email.",
+                                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)

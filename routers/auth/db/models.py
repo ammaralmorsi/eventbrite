@@ -3,7 +3,6 @@ from typing import Annotated
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import EmailStr
-from pydantic import HttpUrl
 
 from bson import ObjectId
 
@@ -27,7 +26,7 @@ lastname_type = Annotated[str, Field(
         title="Last name",
         description="Last name of the user",
     )]
-avatar_url_type = Annotated[HttpUrl | None, Field(
+avatar_url_type = Annotated[str | None, Field(
         example="https://example.com/avatar.png",
         title="Avatar URL",
         description="URL of the user's avatar",
@@ -62,10 +61,6 @@ class UserDB(UserInSignup):
 
 class UserOutLogin(BaseModel):
     token: str
-    email: email_type
-    firstname: firstname_type
-    lastname: lastname_type
-    avatar_url: avatar_url_type
 
 
 class UserToken(BaseModel):

@@ -25,12 +25,12 @@ db = UsersDriver()
 
 def handle_exists_email(email):
     if db.email_exists(email):
-        raise HTTPException(detail={"email already exists"}, status_code=status.HTTP_406_NOT_ACCEPTABLE)
+        raise HTTPException(detail="email already exists", status_code=status.HTTP_406_NOT_ACCEPTABLE)
 
 
 def handle_not_exists_email(email):
     if not db.email_exists(email):
-        raise HTTPException(detail={"email not found"}, status_code=status.HTTP_404_NOT_FOUND)
+        raise HTTPException(detail="email not found", status_code=status.HTTP_404_NOT_FOUND)
 
 
 @router.post("/signup", status_code=status.HTTP_201_CREATED)
@@ -38,9 +38,9 @@ async def signup(user: models.UserInSignup):
     handle_exists_email(user.email)
 
     user.password = password_handler.get_password_hash(user.password)
-    inserted_user: dict = db.create_user(**user.dict())
+    inserted_user: dict = db.create_user(user.dict())
 
-    token = token_handler.encode_token(**inserted_user)
+    token = token_handler.encode_token(models.UserToken(**inserted_user))
     email_handler.send_email(user.email, token, EmailType.SIGNUP_VERIFICATION)
 
     return PlainTextResponse("please verify your email", status_code=status.HTTP_200_OK)
@@ -64,7 +64,7 @@ async def login(user_in: models.UserInLogin) -> models.UserOutLogin:
     if not password_handler.verify_password(user_in.password, user_db.password):
         raise HTTPException(detail="wrong password", status_code=status.HTTP_401_UNAUTHORIZED)
 
-    encoded_token = token_handler.encode_token(**user_db.dict())
+    encoded_token = token_handler.encode_token(models.UserToken(**user_db.dict()))
     if not user_db.is_verified:
         email_handler.send_email(user_db.email, encoded_token, EmailType.SIGNUP_VERIFICATION)
         raise HTTPException(detail="email is not verified", status_code=status.HTTP_401_UNAUTHORIZED)

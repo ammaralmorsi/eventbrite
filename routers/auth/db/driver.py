@@ -11,9 +11,10 @@ class UsersDriver:
         self.db = self.client[os.environ.get("MONGO_DB")]
         self.collection = self.db["users"]
 
-    def create_user(self, user: UserDB):
-        inserted_id = self.collection.insert_one(user.dict()).inserted_id
-        return user.dict().update({"_id": inserted_id})
+    def create_user(self, user):
+        inserted_id = self.collection.insert_one(UserDB(**user).dict()).inserted_id
+        user.update({"_id": inserted_id})
+        return user
 
     def set_is_verified(self, email):
         result = self.collection.update_one({"email": email}, {"$set": {"is_verified": True}})
@@ -23,7 +24,7 @@ class UsersDriver:
         return self.collection.find_one({"email": email})
 
     def email_exists(self, email):
-        return self.collection.find_one({"email": email}) is None
+        return self.collection.find_one({"email": email}) is not None
 
     def update_password(self, email, password):
         return self.collection.update_one({"email": email}, {"$set": {"password": password}})
