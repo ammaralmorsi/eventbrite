@@ -1,15 +1,27 @@
-from pymongo import MongoClient
 import os
 
-def get_db_conn():
-    """
-    Returns a connection to the EventBrite MongoDB database.
+from pymongo import MongoClient
 
-    Returns:
-        pymongo.MongoClient: A MongoClient object representing the database connection.
-    """
-    client = MongoClient(os.environ.get("MONGO_URI"))
-    db = client[os.environ.get("MONGO_DB")]
-    return db
+from .models import UserDB
 
 
+class UsersDriver:
+    def __init__(self):
+        self.client = MongoClient(os.environ.get("MONGO_URI"))
+        self.db = self.client[os.environ.get("MONGO_DB")]
+        self.collection = self.db["users"]
+
+    def create_user(self, user: UserDB):
+        return self.collection.insert_one(user.dict())
+
+    def set_is_verified(self, email):
+        return self.collection.update_one({"email": email}, {"$set": {"is_verified": True}})
+
+    def find_user(self, email):
+        return self.collection.find_one({"email": email})
+
+    def email_exists(self, email):
+        return self.collection.find_one({"email": email}) is None
+
+    def update_password(self, email, password):
+        return self.collection.update_one({"email": email}, {"$set": {"password": password}})

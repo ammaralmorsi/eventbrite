@@ -5,9 +5,8 @@ from fastapi.responses import PlainTextResponse
 from starlette.responses import RedirectResponse
 import jwt
 
-from .commons import is_unique
 from .db import models
-from .db.driver import get_db_conn
+from .db.driver import UsersDriver
 from .password_handler import PasswordHandler
 from .token_handler import TokenHandler
 from .email_handler import EmailHandler
@@ -23,18 +22,18 @@ router = APIRouter(
 password_handler = PasswordHandler()
 token_handler = TokenHandler()
 email_handler = EmailHandler()
-db = get_db_conn()
+db = UsersDriver()
 
 
 @router.post("/signup", status_code=status.HTTP_201_CREATED)
 async def signup(user: models.UserInSignup):
-    if not is_unique(user.email):
+    if not db.email_exists(user.email):
         raise HTTPException(detail={"email is already registered"}, status_code=status.HTTP_406_NOT_ACCEPTABLE)
     token = token_handler.encode_token(user.email)
     email_handler.send_email(user.email, token, EmailType.SIGNUP_VERIFICATION)
     hashed_password = password_handler.get_password_hash(user.password)
     user.password = hashed_password
-    db["User"].insert_one(models.UserDB(**user.dict()).dict())
+    db.create_user(**user.dict())
     return PlainTextResponse("please verify your email", status_code=status.HTTP_200_OK)
 
 
@@ -44,7 +43,7 @@ async def verify_email(token: str):
         email, expiration_time = token_handler.decode_token(token)
         if datetime.utcnow() > expiration_time:
             raise HTTPException(detail="token has expired", status_code=status.HTTP_401_UNAUTHORIZED)
-        result = db["User"].update_one({"email": email}, {"$set": {"is_verified": True}})
+        result = db.set_is_verified(email)
         if result.modified_count != 1:
             raise HTTPException(detail="email not found", status_code=status.HTTP_404_NOT_FOUND)
     except jwt.exceptions.DecodeError:
@@ -55,7 +54,7 @@ async def verify_email(token: str):
 
 @router.post("/login")
 async def login(user: models.UserInLogin) -> models.UserOutLogin:
-    logged_user = db["User"].find_one({"email": user.email})
+    logged_user = db.find_user(user.email)
     if not logged_user:
         raise HTTPException(detail="user not found", status_code=status.HTTP_404_NOT_FOUND)
 
@@ -72,7 +71,7 @@ async def login(user: models.UserInLogin) -> models.UserOutLogin:
 
 @router.post("/forgot-password")
 async def forgot_password(email):
-    logged_user = db["User"].find_one({"email": email})
+    logged_user = db.find_user(email)
     if not logged_user:
         raise HTTPException(detail="user not found", status_code=status.HTTP_404_NOT_FOUND)
     encoded_token = token_handler.encode_token(email)
@@ -86,7 +85,7 @@ async def reset_password(token: str):
         email, expiration_time = token_handler.decode_token(token)
         if datetime.utcnow() > expiration_time:
             raise HTTPException(detail="token has expired", status_code=status.HTTP_401_UNAUTHORIZED)
-        logged_user = db["User"].find_one({"email": email})
+        logged_user = db.find_user(email)
         if not logged_user:
             raise HTTPException(detail="email not found", status_code=status.HTTP_404_NOT_FOUND)
         else:
@@ -100,7 +99,7 @@ async def change_password(token: str, request: models.UserInForgotPassword):
     try:
         email, expiration_time = token_handler.decode_token(token)
         new_password = password_handler.get_password_hash(request.password)
-        db["User"].update_one({"email": email}, {"$set": {"password": new_password}})
+        db.update_password(email, new_password)
         return PlainTextResponse("password updated successfully", status_code=status.HTTP_200_OK)
     except jwt.exceptions.DecodeError:
         raise HTTPException(detail="change password failed", status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -108,7 +107,7 @@ async def change_password(token: str, request: models.UserInForgotPassword):
 
 @router.post("/check-email")
 async def check_email(email):
-    logged_user = db["User"].find_one({"email": email})
-    if not logged_user:
-        return False
-    return True
+    if not db.email_exists(email):
+        raise HTTPException(detail="email not found", status_code=status.HTTP_404)
+
+    return PlainTextResponse("email is available", status_code=status.HTTP_200_OK)
