@@ -25,9 +25,9 @@ app.add_middleware(
 )
 
 
-app.include_router(categories.router)
-app.include_router(events.router)
-app.include_router(tickets.router)
+# app.include_router(categories.router)
+# app.include_router(events.router)
+# app.include_router(tickets.router)
 app.include_router(auth.router)
 
 
