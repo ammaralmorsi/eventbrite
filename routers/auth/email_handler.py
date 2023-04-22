@@ -26,14 +26,14 @@ class EmailHandler:
         self.expiration_date = datetime.utcnow() + timedelta(hours=24)
 
     def generate_html_for_signup_verification(self, token):
-        verification_link = f"http://174.138.101.143/api/auth/verify?token={token}"
+        verification_link = f"http://127.0.0.1:8000/auth/verify?token={token}"
         html = f"<p>Thank you for signing up! Please click the following link to verify your email address:</p>" \
                f"<p><a href='{verification_link}'>{verification_link}</a></p>" \
                f"\<p>The link will expire on {self.expiration_date}.</p>"
         return html
 
     def generate_html_for_forgot_password(self, token):
-        verification_link = f"http://174.138.101.143/api/auth/reset-password?token={token}"
+        verification_link = f"http://127.0.0.1:8000/auth/reset-password?token={token}"
         html = f"<p>Click the following link to reset your password:</p>" \
                f"<p><a href='{verification_link}'>{verification_link}</a></p>" \
                f"<p>The link will expire on {self.expiration_date}.</p>"
