@@ -14,11 +14,10 @@ from .db import models
 class TokenHandler:
     def __init__(self):
         self.secret_key = os.environ.get("JWT_SECRET_KEY")
-        self.token_duration = 24
         self.algorithm = "HS256"
 
-    def encode_token(self, user: models.UserToken):
-        expiration_time = datetime.utcnow() + timedelta(hours=self.token_duration)
+    def encode_token(self, user: models.UserToken, duration=24):
+        expiration_time = datetime.utcnow() + timedelta(hours=duration)
 
         payload = {"exp": expiration_time, "id": str(user.id), "email": user.email}
 

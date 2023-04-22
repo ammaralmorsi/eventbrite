@@ -62,7 +62,7 @@ async def signup(user: models.UserInSignup) -> PlainTextResponse:
     user.password = password_handler.get_password_hash(user.password)
     inserted_user: dict = db.create_user(user.dict())
 
-    token = token_handler.encode_token(models.UserToken(**inserted_user))
+    token = token_handler.encode_token(models.UserToken(**inserted_user), 0.5)
     email_handler.send_email(user.email, token, EmailType.SIGNUP_VERIFICATION)
 
     return PlainTextResponse("please verify your email", status_code=status.HTTP_200_OK)
@@ -202,7 +202,7 @@ async def login(user_in: models.UserInLogin) -> models.UserOutLogin:
 async def forgot_password(email):
     handle_not_exists_email(email)
 
-    encoded_token = token_handler.encode_token(models.UserToken(**db.find_user(email)))
+    encoded_token = token_handler.encode_token(models.UserToken(**db.find_user(email)), 0.5)
     email_handler.send_email(email, encoded_token, EmailType.FORGET_PASSWORD)
     return PlainTextResponse("sent a verification email", status_code=status.HTTP_200_OK)
 
