@@ -33,7 +33,7 @@ class TokenHandler:
     def get_user(self, token) -> models.UserToken:
         try:
             payload = jwt.decode(token, self.secret_key, self.algorithm)
-            payload["id"] = ObjectId(payload["id"])  # Convert _id field to ObjectId
+            payload["id"] = ObjectId(payload["id"])    # Convert _id field to ObjectId
             user = models.UserToken(**payload)
             expiration_time = datetime.fromtimestamp(payload["exp"])
             if datetime.utcnow() > expiration_time:

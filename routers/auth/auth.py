@@ -202,18 +202,9 @@ async def login(user_in: models.UserInLogin) -> models.UserOutLogin:
 async def forgot_password(email):
     handle_not_exists_email(email)
 
-    encoded_token = token_handler.encode_token(**db.find_user(email).dict())
+    encoded_token = token_handler.encode_token(models.UserToken(**db.find_user(email)))
     email_handler.send_email(email, encoded_token, EmailType.FORGET_PASSWORD)
     return PlainTextResponse("sent a verification email", status_code=status.HTTP_200_OK)
-
-
-@router.get("/reset-password")
-async def reset_password(token: str):
-    user = token_handler.get_user(token)
-
-    handle_not_exists_email(user.email)
-
-    return RedirectResponse(url=f"/auth/change-password?token={token}")
 
 
 @router.put(
@@ -244,6 +235,7 @@ async def reset_password(token: str):
 async def change_password(token: str, request: models.UserInForgotPassword):
     user = token_handler.get_user(token)
 
+    handle_not_exists_email(user.email)
     new_password = password_handler.get_password_hash(request.password)
 
     db.update_password(user.email, new_password)
