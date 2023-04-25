@@ -1,4 +1,4 @@
-# EventBrite
+_# EventBrite
 
 EventBrite is an online event registration service that allows users to find and register for events, and allows event
 organizers to plan and promote their events.
@@ -39,6 +39,7 @@ export MONGO_DB=<your database name>
 ```bash
 export EVENTBRITE_EMAIL=<The email needed to send verification>
 export EVENTBRITE_PASSWORD=<The password for the email needed to send verification>
+export JWT_SECRET_KEY=<The secret key for the jwt>
 ```
 6. From inside the virtual environment, demonstrate your ability to run the Python script from the command-line:
 
@@ -50,7 +51,7 @@ uvicorn main:app --reload
 
 
 ## Contributors
-If you want to contribute to this project, please follow the instructions below:
+If you want to contribute to this project, please follow the instructions below:_
 1. You should be invited to the project as a collaborator.
 2. Create a new branch based on *temp* with the following naming convention: `your-feature-name`
 3. Make your changes and push them to the remote repository.

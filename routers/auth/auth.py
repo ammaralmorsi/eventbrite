@@ -1,18 +1,18 @@
-from fastapi import APIRouter
-from fastapi import status
-from fastapi.responses import JSONResponse
-from starlette.responses import RedirectResponse
-import jwt
+from typing import Annotated
 
-from .commons import is_unique
+from fastapi import APIRouter, Depends
+from fastapi import status
+from fastapi import HTTPException
+from fastapi.responses import PlainTextResponse
+from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import OAuth2PasswordRequestForm
+
 from .db import models
-from .db.driver import get_db_conn
+from .db.driver import UsersDriver
 from .password_handler import PasswordHandler
-from .token_handler import TokenHandler
+from dependencies.token_handler import TokenHandler
 from .email_handler import EmailHandler
 from .email_handler import EmailType
-
-from datetime import datetime
 
 router = APIRouter(
     prefix="/auth",
@@ -22,93 +22,269 @@ router = APIRouter(
 password_handler = PasswordHandler()
 token_handler = TokenHandler()
 email_handler = EmailHandler()
-db = get_db_conn()
+db = UsersDriver()
+oath2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 
-@router.post("/signup")
-async def signup(user: models.UserInSignup):
-    if not is_unique(user.email):
-        return JSONResponse(content={"message": "email is already registered"}, status_code=status.HTTP_400_BAD_REQUEST)
-    token = token_handler.encode_token(user.email)
-    send_email_value, body = email_handler.send_email(user.email, token, EmailType.SIGNUP_VERIFICATION)
-    if send_email_value == -1:
-        return JSONResponse(content={"message": body}, status_code=status.HTTP_400_BAD_REQUEST)
-    hashed_password = password_handler.get_password_hash(user.password)
-    user.password = hashed_password
-    db["User"].insert_one(models.UserDB(**user.dict()).dict())
-    return JSONResponse(content={"message": "Please verify your email before your login"},
-                        status_code=status.HTTP_200_OK)
+def handle_exists_email(email):
+    if db.email_exists(email):
+        raise HTTPException(detail="email already exists", status_code=status.HTTP_406_NOT_ACCEPTABLE)
 
 
-@router.get("/verify")
-async def verify_email(token: str):
-    try:
-        email, expiration_time = token_handler.decode_token(token)
-        if datetime.utcnow() > expiration_time:
-            return JSONResponse(content={"message": "Token has expired"}, status_code=status.HTTP_400_BAD_REQUEST)
-        result = db["User"].update_one({"email": email}, {"$set": {"is_verified": True}})
-        if result.modified_count == 1:
-            return JSONResponse(content={"message": "Email verified successfully"}, status_code=status.HTTP_200_OK)
-        else:
-            return JSONResponse(content={"message": "Email not found"}, status_code=status.HTTP_404_NOT_FOUND)
-    except jwt.exceptions.DecodeError:
-        return JSONResponse(content={"message": "Invalid token"}, status_code=status.HTTP_400_BAD_REQUEST)
+def handle_not_exists_email(email):
+    if not db.email_exists(email):
+        raise HTTPException(detail="email not found", status_code=status.HTTP_404_NOT_FOUND)
 
 
-@router.post("/login")
-async def login(user: models.UserInLogin):
-    logged_user = db["User"].find_one({"email": user.email})
-    if not logged_user:
-        return JSONResponse(content={"message": "email is not registered"}, status_code=status.HTTP_401_UNAUTHORIZED)
+@router.post(
+    "/signup",
+    summary="create a new user",
+    description="add user to the database and send email to verify",
+    response_class=PlainTextResponse,
+    responses={
+        status.HTTP_200_OK: {
+            "description": "email sent successfully to verify and user is added to the database",
+            "content": {
+                "text/plain": {
+                    "example": "unverified user is created, please verify your email"
+                },
+            }
+        },
+        status.HTTP_406_NOT_ACCEPTABLE: {
+            "description": "email already exists",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "email already exists"
+                    }
+                }
+            }
+        }
+    }
+)
+async def signup(user: models.UserInSignup) -> PlainTextResponse:
+    handle_exists_email(user.email)
 
-    if not password_handler.verify_password(user.password, logged_user["password"]):
-        return JSONResponse(content={"message": "wrong password"}, status_code=status.HTTP_401_UNAUTHORIZED)
-    encoded_token = token_handler.encode_token(user.email)
-    if not logged_user["is_verified"]:
-        email_handler.send_email(logged_user["email"], encoded_token, EmailType.SIGNUP_VERIFICATION)
-        return JSONResponse(content={"message": "email is not verified"}, status_code=status.HTTP_401_UNAUTHORIZED)
-    return models.UserOutLogin(**logged_user, token=encoded_token)
+    user.password = password_handler.get_password_hash(user.password)
+    inserted_user: dict = db.create_user(user.dict())
+
+    token = token_handler.encode_token(models.UserToken(**inserted_user), 0.5)
+    email_handler.send_email(user.email, token, EmailType.SIGNUP_VERIFICATION)
+
+    return PlainTextResponse("unverified user is created, please verify your email", status_code=status.HTTP_200_OK)
 
 
-@router.post("/forgot-password")
+@router.put(
+    "/verify-email",
+    summary="verify email",
+    description="given a token, verify the email",
+    response_class=PlainTextResponse,
+    responses={
+        status.HTTP_200_OK: {
+            "description": "email verified successfully",
+            "content": {
+                "text/plain": {
+                    "example": "email verified successfully"
+                },
+            }
+        },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "invalid token",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "invalid token"
+                    }
+                }
+            }
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "email not found",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "email not found"
+                    }
+                }
+            }
+        },
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "description": "can't verify email",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "can't verify email"
+                    }
+                }
+            }
+        }
+    }
+)
+async def verify_email(token: Annotated[str, Depends(oath2_scheme)]):
+    user = token_handler.get_user(token)
+
+    handle_not_exists_email(user.email)
+
+    if not db.set_is_verified(user.email):
+        raise HTTPException(detail="can't verify email", status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    return PlainTextResponse("email verified successfully", status_code=status.HTTP_200_OK)
+
+
+@router.post(
+    "/login",
+    summary="generate access token",
+    description="login and get access token",
+    response_model=models.UserOutLogin,
+    responses={
+        status.HTTP_200_OK: {
+            "description": "login successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQGV4YW1wbGUuY29tIiwiaWF0IjoxNjIyNjQyNjQyLCJleHAiOjE",
+                        "token_type": "bearer"
+                    }
+                }
+            }
+        },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "wrong password or email is not verified",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "wrong password or email is not verified"
+                    }
+                }
+            },
+            status.HTTP_404_NOT_FOUND: {
+                "description": "email not found",
+                "content": {
+                    "application/json": {
+                        "example": {
+                            "detail": "email not found"
+                        }
+                    }
+                }
+            }
+        }
+    }
+)
+async def login(user_in: Annotated[OAuth2PasswordRequestForm, Depends()]) -> models.UserOutLogin:
+    user_in = models.UserInLogin(email=user_in.username, password=user_in.password)
+
+    handle_not_exists_email(user_in.email)
+    user_db: models.UserDB = models.UserDB(**db.find_user(user_in.email))
+    if not password_handler.verify_password(user_in.password, user_db.password):
+        raise HTTPException(detail="wrong password", status_code=status.HTTP_401_UNAUTHORIZED)
+
+    encoded_token = token_handler.encode_token(models.UserToken(**user_db.dict()))
+    if not user_db.is_verified:
+        email_handler.send_email(user_db.email, encoded_token, EmailType.SIGNUP_VERIFICATION)
+        raise HTTPException(detail="email is not verified", status_code=status.HTTP_401_UNAUTHORIZED)
+
+    return models.UserOutLogin(access_token=encoded_token)
+
+
+@router.post(
+    "/forgot-password",
+    summary="send a verification email to reset password",
+    description="given an email, send a verification email to reset password",
+    response_class=PlainTextResponse,
+    responses={
+        status.HTTP_200_OK: {
+            "description": "sent a verification email",
+            "content": {
+                "text/plain": {
+                    "example": "sent a verification email"
+                },
+            }
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "email not found",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "email not found"
+                    }
+                }
+            }
+        }
+    }
+
+)
 async def forgot_password(email):
-    logged_user = db["User"].find_one({"email": email})
-    if not logged_user:
-        return JSONResponse(content={"message": "Email is not found"}, status_code=status.HTTP_404_NOT_FOUND)
-    encoded_token = token_handler.encode_token(email)
+    handle_not_exists_email(email)
+
+    encoded_token = token_handler.encode_token(models.UserToken(**db.find_user(email)), 0.5)
     email_handler.send_email(email, encoded_token, EmailType.FORGET_PASSWORD)
-    return JSONResponse(content={"message": "Sent a verification email"}, status_code=status.HTTP_200_OK)
+    return PlainTextResponse("sent a verification email", status_code=status.HTTP_200_OK)
 
 
-@router.get("/reset-password")
-async def reset_password(token: str):
-    try:
-        email, expiration_time = token_handler.decode_token(token)
-        if datetime.utcnow() > expiration_time:
-            return JSONResponse(content={"message": "Token has expired"}, status_code=status.HTTP_400_BAD_REQUEST)
-        logged_user = db["User"].find_one({"email": email})
-        if not logged_user:
-            return JSONResponse(content={"message": "Email not found"}, status_code=status.HTTP_404_NOT_FOUND)
-        else:
-            return RedirectResponse(url=f"/auth/change-password?token={token}")
-    except jwt.exceptions.DecodeError:
-        return JSONResponse(content={"message": "Invalid token"}, status_code=status.HTTP_400_BAD_REQUEST)
+@router.put(
+    "/change-password",
+    summary="change password",
+    description="given a token, change the password",
+    response_class=PlainTextResponse,
+    responses={
+        status.HTTP_200_OK: {
+            "description": "password updated successfully",
+            "content": {
+                "text/plain": {
+                    "example": "password updated successfully"
+                },
+            }
+        },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "invalid token",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "invalid token"
+                    }
+                }
+            }
+        }
+    }
+
+)
+async def change_password(token: Annotated[str, Depends(oath2_scheme)], request: models.UserInForgotPassword):
+    user = token_handler.get_user(token)
+
+    handle_not_exists_email(user.email)
+    new_password = password_handler.get_password_hash(request.new_password)
+
+    db.update_password(user.email, new_password)
+    return PlainTextResponse("password updated successfully", status_code=status.HTTP_200_OK)
 
 
-@router.put("/change-password")
-async def change_password(token: str, request: models.UserInForgotPassword):
-    try:
-        email, expiration_time = token_handler.decode_token(token)
-        new_password = password_handler.get_password_hash(request.password)
-        db["User"].update_one({"email": email}, {"$set": {"password": new_password}})
-        return JSONResponse(content={"message": "Password updated successfully"}, status_code=status.HTTP_200_OK)
-    except jwt.exceptions.DecodeError:
-        return JSONResponse(content={"message": "Change password failed"}, status_code=status.HTTP_400_BAD_REQUEST)
-
-
-@router.post("/check-email")
+@router.post(
+    "/check-email",
+    summary="check if email is available",
+    description="check if email is available",
+    response_class=PlainTextResponse,
+    responses={
+        status.HTTP_200_OK: {
+            "description": "email is available",
+            "content": {
+                "text/plain": {
+                    "example": "email is available"
+                },
+            }
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "email not found",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "email not found"
+                    }
+                }
+            }
+        }
+    }
+)
 async def check_email(email):
-    logged_user = db["User"].find_one({"email": email})
-    if not logged_user:
-        return False
-    return True
+    handle_not_exists_email(email)
+
+    return PlainTextResponse("email is available", status_code=status.HTTP_200_OK)

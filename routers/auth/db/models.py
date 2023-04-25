@@ -3,7 +3,8 @@ from typing import Annotated
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import EmailStr
-from pydantic import HttpUrl
+
+from bson import ObjectId
 
 password_type = Annotated[str, Field(
         example="password",
@@ -25,7 +26,7 @@ lastname_type = Annotated[str, Field(
         title="Last name",
         description="Last name of the user",
     )]
-avatar_url_type = Annotated[HttpUrl | None, Field(
+avatar_url_type = Annotated[str | None, Field(
         example="https://example.com/avatar.png",
         title="Avatar URL",
         description="URL of the user's avatar",
@@ -50,7 +51,7 @@ class UserInLogin(BaseModel):
 
 
 class UserInForgotPassword(BaseModel):
-    password: password_type
+    new_password: password_type
 
 
 class UserDB(UserInSignup):
@@ -59,8 +60,15 @@ class UserDB(UserInSignup):
 
 
 class UserOutLogin(BaseModel):
-    token: str
+    access_token: str
+    token_type: str = "bearer"
+
+
+class UserToken(BaseModel):
+    id: ObjectId = Field(default_factory=ObjectId, alias="_id")
     email: email_type
-    firstname: firstname_type
-    lastname: lastname_type
-    avatar_url: avatar_url_type
+
+    class Config:
+        allow_population_by_field_name = True
+        arbitrary_types_allowed = True
+        json_encoders = {ObjectId: str}
