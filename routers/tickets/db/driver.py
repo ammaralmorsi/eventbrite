@@ -1,6 +1,6 @@
 import os
 from pymongo import MongoClient
-
+from bson.objectid import ObjectId
 
 class TicketDriver:
     """
@@ -28,7 +28,9 @@ class TicketDriver:
             The result of the insertion operation.
 
         """
-        return self.collection.insert_one({"_id": event_id, "tickets": tickets})
+        # event = self.collection.find_one({"_id": event_id})
+
+        return self.collection.update_one({"_id": event_id}, {"$set": {"tickets": tickets}})
 
     def find_by_event_id(self, query):
         """
@@ -56,16 +58,5 @@ class TicketDriver:
         """
         return self.collection.count_documents(query)
 
-    def update_tickets(self, query, data):
-        """
-        Updates the tickets for a given event ID in the MongoDB collection.
-
-        Args:
-            query: A dictionary containing the query criteria for the event ID.
-            data: A dictionary containing the update data for the tickets.
-
-        Returns:
-            An instance of the UpdateResult class that contains information about the update operation.
-
-        """
-        return self.collection.update_one(query, data)
+    def update_tickets(self, event_id, tickets):
+        return self.collection.update_one({"_id": ObjectId(event_id)}, {"$set": {"tickets": tickets}})
