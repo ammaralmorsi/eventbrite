@@ -8,7 +8,7 @@ import jwt
 from fastapi import HTTPException
 from fastapi import status
 
-from .db import models
+from routers.auth.db import models
 
 
 class TokenHandler:

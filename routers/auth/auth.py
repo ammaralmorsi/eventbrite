@@ -10,7 +10,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from .db import models
 from .db.driver import UsersDriver
 from .password_handler import PasswordHandler
-from .token_handler import TokenHandler
+from dependencies.token_handler import TokenHandler
 from .email_handler import EmailHandler
 from .email_handler import EmailType
 
@@ -38,6 +38,7 @@ def handle_not_exists_email(email):
 
 @router.post(
     "/signup",
+    summary="create a new user",
     description="add user to the database and send email to verify",
     response_class=PlainTextResponse,
     responses={
@@ -73,8 +74,9 @@ async def signup(user: models.UserInSignup) -> PlainTextResponse:
     return PlainTextResponse("unverified user is created, please verify your email", status_code=status.HTTP_200_OK)
 
 
-@router.get(
+@router.put(
     "/verify-email",
+    summary="verify email",
     description="given a token, verify the email",
     response_class=PlainTextResponse,
     responses={
@@ -131,6 +133,7 @@ async def verify_email(token: Annotated[str, Depends(oath2_scheme)]):
 
 @router.post(
     "/login",
+    summary="generate access token",
     description="login and get access token",
     response_model=models.UserOutLogin,
     responses={
@@ -185,6 +188,7 @@ async def login(user_in: Annotated[OAuth2PasswordRequestForm, Depends()]) -> mod
 
 @router.post(
     "/forgot-password",
+    summary="send a verification email to reset password",
     description="given an email, send a verification email to reset password",
     response_class=PlainTextResponse,
     responses={
@@ -219,6 +223,7 @@ async def forgot_password(email):
 
 @router.put(
     "/change-password",
+    summary="change password",
     description="given a token, change the password",
     response_class=PlainTextResponse,
     responses={
@@ -255,6 +260,7 @@ async def change_password(token: Annotated[str, Depends(oath2_scheme)], request:
 
 @router.post(
     "/check-email",
+    summary="check if email is available",
     description="check if email is available",
     response_class=PlainTextResponse,
     responses={
