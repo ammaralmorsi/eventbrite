@@ -15,16 +15,6 @@ class PromocodeDriver:
         self.db = self.client[os.environ.get("MONGO_DB")]
         self.collection = self.db['events']
 
-    def insert(self, event_id, promo_codes):
-        """
-        Inserts a document into the MongoDB collection.
-        Args:
-            event_id: The ID of the event to create promo codes for.
-            promo_codes: A list of promo codes to be created.
-        Returns:
-            The result of the insertion operation.
-        """
-        return self.collection.insert_one({"_id": event_id, "promo_codes": promo_codes})
 
     def find_by_event_id(self, query):
         """
@@ -86,4 +76,3 @@ class PromocodeDriver:
             The result of the delete operation.
         """
         return self.collection.delete_many(query)
-
