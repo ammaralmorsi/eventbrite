@@ -28,7 +28,6 @@ class TokenHandler:
         except TypeError as e:
             raise HTTPException(detail="type error", status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-
     def get_user(self, token) -> models.UserToken:
         try:
             payload = jwt.decode(token, self.secret_key, self.algorithm)

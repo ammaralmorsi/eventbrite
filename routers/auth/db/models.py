@@ -51,7 +51,7 @@ class UserInLogin(BaseModel):
 
 
 class UserInForgotPassword(BaseModel):
-    password: password_type
+    new_password: password_type
 
 
 class UserDB(UserInSignup):
@@ -60,7 +60,8 @@ class UserDB(UserInSignup):
 
 
 class UserOutLogin(BaseModel):
-    token: str
+    access_token: str
+    token_type: str = "bearer"
 
 
 class UserToken(BaseModel):

@@ -18,7 +18,6 @@ class UsersDriver:
         except mongo_errors.PyMongoError:
             raise HTTPException(detail="database error", status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-
     def create_user(self, user):
         try:
             inserted_id = self.collection.insert_one(UserDB(**user).dict()).inserted_id
@@ -30,7 +29,7 @@ class UsersDriver:
     def set_is_verified(self, email):
         try:
             result = self.collection.update_one({"email": email}, {"$set": {"is_verified": True}})
-            return result.modified_count == 1
+            return result.matched_count == 1 or result.modified_count == 1
         except mongo_errors.PyMongoError:
             raise HTTPException(detail="database error", status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 

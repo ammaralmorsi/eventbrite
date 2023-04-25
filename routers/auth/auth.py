@@ -1,8 +1,11 @@
-from fastapi import APIRouter
+from typing import Annotated
+
+from fastapi import APIRouter, Depends
 from fastapi import status
 from fastapi import HTTPException
 from fastapi.responses import PlainTextResponse
-from starlette.responses import RedirectResponse
+from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import OAuth2PasswordRequestForm
 
 from .db import models
 from .db.driver import UsersDriver
@@ -20,6 +23,7 @@ password_handler = PasswordHandler()
 token_handler = TokenHandler()
 email_handler = EmailHandler()
 db = UsersDriver()
+oath2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 
 def handle_exists_email(email):
@@ -34,13 +38,14 @@ def handle_not_exists_email(email):
 
 @router.post(
     "/signup",
+    description="add user to the database and send email to verify",
     response_class=PlainTextResponse,
     responses={
         status.HTTP_200_OK: {
-            "description": "email sent successfully",
+            "description": "email sent successfully to verify and user is added to the database",
             "content": {
                 "text/plain": {
-                    "example": "please verify your email"
+                    "example": "unverified user is created, please verify your email"
                 },
             }
         },
@@ -65,11 +70,12 @@ async def signup(user: models.UserInSignup) -> PlainTextResponse:
     token = token_handler.encode_token(models.UserToken(**inserted_user), 0.5)
     email_handler.send_email(user.email, token, EmailType.SIGNUP_VERIFICATION)
 
-    return PlainTextResponse("please verify your email", status_code=status.HTTP_200_OK)
+    return PlainTextResponse("unverified user is created, please verify your email", status_code=status.HTTP_200_OK)
 
 
 @router.get(
-    "/verify",
+    "/verify-email",
+    description="given a token, verify the email",
     response_class=PlainTextResponse,
     responses={
         status.HTTP_200_OK: {
@@ -112,7 +118,7 @@ async def signup(user: models.UserInSignup) -> PlainTextResponse:
         }
     }
 )
-async def verify_email(token: str):
+async def verify_email(token: Annotated[str, Depends(oath2_scheme)]):
     user = token_handler.get_user(token)
 
     handle_not_exists_email(user.email)
@@ -125,6 +131,7 @@ async def verify_email(token: str):
 
 @router.post(
     "/login",
+    description="login and get access token",
     response_model=models.UserOutLogin,
     responses={
         status.HTTP_200_OK: {
@@ -132,7 +139,8 @@ async def verify_email(token: str):
             "content": {
                 "application/json": {
                     "example": {
-                        "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJlbWFpbCI6Im1haWx0b25AZ21haWwuY29tIiwiaWF0IjoxNjI3MzQ0MjE2LCJleHAiOjE2Mjc0MzA2MTZ9.1aX9f1jK2QyOwYgY0C8tDx4Z0H4Z1T0Z2Q9gY4Z1T0Z",
+                        "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQGV4YW1wbGUuY29tIiwiaWF0IjoxNjIyNjQyNjQyLCJleHAiOjE",
+                        "token_type": "bearer"
                     }
                 }
             }
@@ -159,9 +167,10 @@ async def verify_email(token: str):
         }
     }
 )
-async def login(user_in: models.UserInLogin) -> models.UserOutLogin:
-    handle_not_exists_email(user_in.email)
+async def login(user_in: Annotated[OAuth2PasswordRequestForm, Depends()]) -> models.UserOutLogin:
+    user_in = models.UserInLogin(email=user_in.username, password=user_in.password)
 
+    handle_not_exists_email(user_in.email)
     user_db: models.UserDB = models.UserDB(**db.find_user(user_in.email))
     if not password_handler.verify_password(user_in.password, user_db.password):
         raise HTTPException(detail="wrong password", status_code=status.HTTP_401_UNAUTHORIZED)
@@ -171,11 +180,12 @@ async def login(user_in: models.UserInLogin) -> models.UserOutLogin:
         email_handler.send_email(user_db.email, encoded_token, EmailType.SIGNUP_VERIFICATION)
         raise HTTPException(detail="email is not verified", status_code=status.HTTP_401_UNAUTHORIZED)
 
-    return models.UserOutLogin(token=encoded_token)
+    return models.UserOutLogin(access_token=encoded_token)
 
 
 @router.post(
     "/forgot-password",
+    description="given an email, send a verification email to reset password",
     response_class=PlainTextResponse,
     responses={
         status.HTTP_200_OK: {
@@ -209,6 +219,7 @@ async def forgot_password(email):
 
 @router.put(
     "/change-password",
+    description="given a token, change the password",
     response_class=PlainTextResponse,
     responses={
         status.HTTP_200_OK: {
@@ -232,11 +243,11 @@ async def forgot_password(email):
     }
 
 )
-async def change_password(token: str, request: models.UserInForgotPassword):
+async def change_password(token: Annotated[str, Depends(oath2_scheme)], request: models.UserInForgotPassword):
     user = token_handler.get_user(token)
 
     handle_not_exists_email(user.email)
-    new_password = password_handler.get_password_hash(request.password)
+    new_password = password_handler.get_password_hash(request.new_password)
 
     db.update_password(user.email, new_password)
     return PlainTextResponse("password updated successfully", status_code=status.HTTP_200_OK)
@@ -244,6 +255,7 @@ async def change_password(token: str, request: models.UserInForgotPassword):
 
 @router.post(
     "/check-email",
+    description="check if email is available",
     response_class=PlainTextResponse,
     responses={
         status.HTTP_200_OK: {
