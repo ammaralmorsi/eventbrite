@@ -1,6 +1,5 @@
 from fastapi import APIRouter
 from fastapi.responses import PlainTextResponse
-from bson import ObjectId
 from typing import List
 from .db.driver import PromocodeDriver
 from ..events.db.embeded_models.promocode import PromoCode
@@ -14,6 +13,19 @@ router = APIRouter(
 db_handler = PromocodeDriver()
 
 
+def is_valid_event_id(event_id):
+    return db_handler.is_valid_event_id(event_id)
+
+
+def is_valid_update(event_id, codes):
+    if db_handler.update_promocodes(event_id, codes):
+        if not codes:
+            return PlainTextResponse("Tickets deleted successfully", status_code=200)
+        return PlainTextResponse("Tickets updated successfully", status_code=200)
+    else:
+        return PlainTextResponse("Tickets update failed", status_code=500)
+
+
 @router.post(
     "/{event_id}",
     summary="Create promocodes by event id",
@@ -24,25 +36,17 @@ db_handler = PromocodeDriver()
     },
 )
 async def create_promocodes_by_event_id(event_id: str, promocodes: List[PromoCode]):
-    """
-        Create promocodes for a given event ID.
+    if not is_valid_event_id(event_id):
+        return PlainTextResponse("Event ID is invalid", status_code=404)
 
-        Args:
-            event_id (str): The ID of the event to create promocodes for.
-            promocodes (List[Promocode]): A list of promocodes to be created.
+    codes_as_dicts = [promocode.dict() for promocode in promocodes]
+    promocodes_in_event = db_handler.find_by_event_id(event_id)
 
-        Returns:
-            PlainTextResponse: The response indicating whether the promocodes were created successfully or not.
-        """
-    promocodes_in_event = db_handler.find_by_event_id({"_id": ObjectId(event_id)})
     result = []
-    result.append(promocodes_in_event)
-    result.append(promocodes)
+    result.extend(promocodes_in_event["promo_codes"])
+    result.extend(codes_as_dicts)
 
-    if db_handler.update_by_event_id({"_id": ObjectId(event_id)}, {"promocodes": result}):
-        return PlainTextResponse("Promocodes created successfully", status_code=201)
-    else:
-        return PlainTextResponse("Promocodes creation failed", status_code=500)
+    return is_valid_update(event_id, result)
 
 
 @router.get(
@@ -56,9 +60,10 @@ async def create_promocodes_by_event_id(event_id: str, promocodes: List[PromoCod
 )
 async def get_promocodes_by_event_id(event_id: str) -> List[PromoCode]:
 
-    if db_handler.count({"_id": ObjectId(event_id)}) == 0:
+    if not is_valid_event_id(event_id):
         return []
-    codes = db_handler.find_by_event_id({"_id": ObjectId(event_id)})
+
+    codes = db_handler.find_by_event_id(event_id)
     result = []
     codes = codes["promo_codes"]
     for code in codes:
@@ -77,9 +82,7 @@ async def get_promocodes_by_event_id(event_id: str) -> List[PromoCode]:
     },
 )
 async def delete_promocodes_by_event_id(event_id: str):
-    if db_handler.delete_by_event_id({"_id": ObjectId(event_id)}):
+    if not is_valid_event_id(event_id):
+        return PlainTextResponse("Event ID is invalid", status_code=404)
 
-
-        return PlainTextResponse("Promocodes deleted successfully", status_code=200)
-    else:
-        return PlainTextResponse("Promocodes deletion failed", status_code=500)
+    return is_valid_update(event_id, [])

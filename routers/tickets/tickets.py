@@ -84,6 +84,9 @@ async def create_tickets_by_event_id(event_id: str, tickets: List[Ticket]):
     Returns:
     - A PlainTextResponse object indicating whether the creation was successful.
     """
+    if not is_valid_event_id(event_id):
+        return PlainTextResponse("Event ID not found", status_code=404)
+
     tickets_in_event = db_handler.find_by_event_id(event_id)
     result = []
 

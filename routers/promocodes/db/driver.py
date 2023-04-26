@@ -1,5 +1,6 @@
 import os
 from pymongo import MongoClient
+from bson.objectid import ObjectId
 
 
 class PromocodeDriver:
@@ -15,64 +16,11 @@ class PromocodeDriver:
         self.db = self.client[os.environ.get("MONGO_DB")]
         self.collection = self.db['events']
 
+    def is_valid_event_id(self, event_id):
+        return self.collection.count_documents({"_id": ObjectId(event_id)})
 
-    def find_by_event_id(self, query):
-        """
-        Finds a document in the MongoDB collection by a given query.
-        Args:
-            query: A dictionary containing the query criteria.
-        Returns:
-            The document that matches the query criteria, or None if no match is found.
-        """
-        return self.collection.find(query)
+    def find_by_event_id(self, event_id):
+        return self.collection.find_one({"_id": ObjectId(event_id)})
 
-    def count(self, query):
-        """
-        Counts the number of documents in the MongoDB collection that match a given query.
-        Args:
-            query: A dictionary containing the query criteria.
-        Returns:
-            The number of documents that match the query criteria.
-        """
-        return self.collection.count_documents(query)
-
-    def update_by_event_id(self, query, data):
-        """
-        Updates a document in the MongoDB collection.
-        Args:
-            query: A dictionary containing the query criteria.
-            data: A dictionary containing the data to be updated.
-        Returns:
-            The result of the update operation.
-        """
-        return self.collection.update_many(query, {"$set": data})
-
-    def delete_by_event_id(self, query):
-        """
-        Deletes a document in the MongoDB collection.
-        Args:
-            query: A dictionary containing the query criteria.
-        Returns:
-            The result of the delete operation.
-        """
-        return self.collection.delete_many(query)
-
-    def delete_by_event_id_and_promocode_id(self, query, data):
-        """
-        Deletes a document in the MongoDB collection.
-        Args:
-            query: A dictionary containing the query criteria.
-        Returns:
-            The result of the delete operation.
-        """
-        return self.collection.delete_one(query, {"$set": data})
-
-    def delete(self, query):
-        """
-        Deletes a document in the MongoDB collection.
-        Args:
-            query: A dictionary containing the query criteria.
-        Returns:
-            The result of the delete operation.
-        """
-        return self.collection.delete_many(query)
+    def update_promocodes(self, event_id, promocodes):
+        return self.collection.update_one({"_id": ObjectId(event_id)}, {"$set": {"promo_codes": promocodes}})
