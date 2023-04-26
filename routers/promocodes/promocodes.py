@@ -4,20 +4,22 @@ from typing import List
 from .db.driver import PromocodeDriver
 from ..events.db.embeded_models.promocode import PromoCode
 
-
 router = APIRouter(
     prefix="/promocodes",
     tags=["promocodes"],
 )
 
+# Create a PromocodeDriver instance to handle database operations
 db_handler = PromocodeDriver()
 
 
 def is_valid_event_id(event_id):
+    """Check if the event ID is valid"""
     return db_handler.is_valid_event_id(event_id)
 
 
 def is_valid_update(event_id, codes):
+    """Update the promocodes for the specified event ID"""
     if db_handler.update_promocodes(event_id, codes):
         return PlainTextResponse("Promocodes updated successfully", status_code=200)
     else:
@@ -25,6 +27,7 @@ def is_valid_update(event_id, codes):
 
 
 def is_valid_deletion(event_id, codes):
+    """Delete the promocode with the specified name for the specified event ID"""
     if db_handler.update_promocodes(event_id, codes):
         return PlainTextResponse("Promocodes deleted successfully", status_code=200)
     else:
@@ -41,6 +44,16 @@ def is_valid_deletion(event_id, codes):
     },
 )
 async def create_promocodes_by_event_id(event_id: str, promocodes: List[PromoCode]):
+    """
+    Create promocodes for the specified event ID.
+
+    Args:
+        event_id: The ID of the event for which to create promocodes.
+        promocodes: A list of PromoCode objects representing the promocodes to create.
+
+    Returns:
+        A PlainTextResponse indicating if the operation succeeded or failed.
+    """
     if not is_valid_event_id(event_id):
         return PlainTextResponse("Event ID is invalid", status_code=404)
 
@@ -64,6 +77,16 @@ async def create_promocodes_by_event_id(event_id: str, promocodes: List[PromoCod
     },
 )
 async def update_promocodes_by_event_id(event_id: str, promocodes: List[PromoCode]):
+    """
+    Update the promocodes for the specified event ID.
+
+    Args:
+        event_id: The ID of the event for which to update promocodes.
+        promocodes: A list of PromoCode objects representing the promocodes to update.
+
+    Returns:
+        A PlainTextResponse indicating if the operation succeeded or failed.
+    """
     if not is_valid_event_id(event_id):
         return PlainTextResponse("Event ID is invalid", status_code=404)
 
@@ -82,14 +105,27 @@ async def update_promocodes_by_event_id(event_id: str, promocodes: List[PromoCod
     },
 )
 async def update_promocode_by_event_id_and_name(event_id: str, name: str, promocode: PromoCode):
+    """
+    Update the promocode with the specified name for the specified event ID.
+
+    Args:
+        event_id: The ID of the event for which to update the promocode.
+        name: The name of the promocode to update.
+        promocode: A PromoCode object representing the updated promocode.
+
+    Returns:
+        A PlainTextResponse indicating if the operation succeeded or failed.
+    """
     if not is_valid_event_id(event_id):
         return PlainTextResponse("Event ID is invalid", status_code=404)
 
     codes = db_handler.find_by_event_id(event_id)
     codes = codes["promo_codes"]
+    old_length = len(codes)
     codes = [code for code in codes if code["name"] != name]
     codes.append(promocode.dict())
-
+    if old_length != len(codes):
+        return PlainTextResponse("Promocode not found", status_code=404)
     return is_valid_update(event_id, codes)
 
 
@@ -103,7 +139,20 @@ async def update_promocode_by_event_id_and_name(event_id: str, name: str, promoc
     },
 )
 async def get_promocodes_by_event_id(event_id: str) -> List[PromoCode]:
+    """
+    Get promocodes by event id.
 
+    Parameters
+    ----------
+    event_id : str
+        The event ID to search for.
+
+    Returns
+    -------
+    List[PromoCode]
+        A list of PromoCode objects retrieved from the 'promo_codes' field of the document in the 'events' collection
+        that matches the provided event_id.
+    """
     if not is_valid_event_id(event_id):
         return []
 
@@ -126,6 +175,21 @@ async def get_promocodes_by_event_id(event_id: str) -> List[PromoCode]:
     },
 )
 async def get_promocode_by_event_id_and_name(event_id: str, name: str):
+    """
+    Get promocode by name.
+
+    Parameters
+    ----------
+    event_id : str
+        The event ID to search for.
+    name : str
+        The name of the promocode to retrieve.
+
+    Returns
+    -------
+    Union[PromoCode, PlainTextResponse]
+        A PromoCode object that matches the provided event_id and name, or a PlainTextResponse with an error message.
+    """
     if not is_valid_event_id(event_id):
         return PlainTextResponse("Event ID is invalid", status_code=404)
 
@@ -148,6 +212,19 @@ async def get_promocode_by_event_id_and_name(event_id: str, name: str):
     },
 )
 async def delete_promocodes_by_event_id(event_id: str):
+    """
+    Delete promocodes by event id.
+
+    Parameters
+    ----------
+    event_id : str
+        The event ID to search for.
+
+    Returns
+    -------
+    Union[bool, PlainTextResponse]
+        True if the deletion was successful, or a PlainTextResponse with an error message.
+    """
     if not is_valid_event_id(event_id):
         return PlainTextResponse("Event ID is invalid", status_code=404)
 
@@ -164,6 +241,21 @@ async def delete_promocodes_by_event_id(event_id: str):
     },
 )
 async def delete_promocode_by_event_id_and_name(event_id: str, name: str):
+    """
+    Delete promocode by name.
+
+    Parameters
+    ----------
+    event_id : str
+        The event ID to search for.
+    name : str
+        The name of the promocode to delete.
+
+    Returns
+    -------
+    Union[bool, PlainTextResponse]
+        True if the deletion was successful, or a PlainTextResponse with an error message.
+    """
     if not is_valid_event_id(event_id):
         return PlainTextResponse("Event ID is invalid", status_code=404)
 
@@ -177,5 +269,3 @@ async def delete_promocode_by_event_id_and_name(event_id: str, name: str):
             codes.remove(code)
             break
     return is_valid_deletion(event_id, codes)
-
-
