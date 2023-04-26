@@ -3,17 +3,6 @@ from pydantic import BaseModel, Field, constr
 
 
 class BasicInfo(BaseModel):
-    """
-    Represents basic information of an event.
-
-    Attributes:
-        title (str): Title of the event.
-        organizer (str): Organizer of the event.
-        category (str): Category of the event.
-        sub_category (str): Sub-category of the event.
-        tags (List[str]): Tags of the event (max 10 items, each with max 25 characters).
-    """
-
     title: str = Field(..., description="Title of the event")
     organizer: str = Field(..., description="Organizer of the event")
     category: str = Field(..., description="Category of the event")
@@ -22,9 +11,6 @@ class BasicInfo(BaseModel):
                                               description="Tags of the event (max 10 items, each with max 25 characters)")
 
     class Config:
-        """
-        Pydantic configuration settings for BasicInfo model.
-        """
         schema_extra = {
             "example": {
                 "title": "Example Event",

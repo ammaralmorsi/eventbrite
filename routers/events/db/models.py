@@ -11,9 +11,6 @@ from .embeded_models.promocode import PromoCode
 
 
 class Event(BaseModel):
-    """
-    Represents an event with its details.
-    """
     basic_info: BasicInfo = Field(..., description="Basic information of the event")
     image_link: str = Field(..., description="Image link of the event")
     summary: str = Field(..., description="Summary of the event")
@@ -25,9 +22,6 @@ class Event(BaseModel):
     promo_codes: List[PromoCode] = Field(..., description="List of promo codes available for the event")
 
     class Config:
-        """
-        Configuration class for Event model.
-        """
         schema_extra = {
             "example": {
                 "basic_info": {
@@ -97,7 +91,4 @@ class Event(BaseModel):
 
 
 class EventDB(Event):
-    """
-    Represents an event with its details in the database, including an additional ID field.
-    """
     id: str | None = Field(None, description="Event ID")
