@@ -1,8 +1,27 @@
+"""
+This module defines an API for managing tickets for events using the FastAPI framework.
+
+This module contains an APIRouter object from the FastAPI library, which handles HTTP requests to the /tickets endpoint.
+
+Functions:
+- is_valid_event_id(event_id): Determines whether the specified event ID is valid.
+- is_valid_update(event_id, tickets): Updates the tickets for the specified event ID
+ and returns a PlainTextResponse object indicating whether the update was successful.
+
+Endpoints:
+- POST /tickets/{event_id}: Creates tickets for the specified event ID.
+- GET /tickets/{event_id}: Retrieves the tickets for the specified event ID.
+- PUT /tickets/{event_id}: Updates the tickets for the specified event ID.
+- DELETE /tickets/{event_id}: Deletes the tickets for the specified event ID.
+
+"""
+
 from typing import List
 from fastapi import APIRouter
 from fastapi.responses import PlainTextResponse
 from .db.driver import TicketDriver
 from ..events.db.embeded_models.ticket import Ticket
+
 
 router = APIRouter(
     prefix="/tickets",
@@ -13,10 +32,30 @@ db_handler = TicketDriver()
 
 
 def is_valid_event_id(event_id):
+    """
+    This function determines whether the specified event ID is valid.
+
+    Args:
+    - event_id: A string representing the ID of the event.
+
+    Returns:
+    - A boolean value indicating whether the event ID is valid.
+    """
     return db_handler.is_valid_event_id(event_id)
 
 
 def is_valid_update(event_id, tickets):
+    """
+    This function updates the tickets for the specified event ID
+    and returns a PlainTextResponse object indicating whether the update was successful.
+
+    Args:
+    - event_id: A string representing the ID of the event.
+    - tickets: A list of Ticket objects representing the tickets to be updated.
+
+    Returns:
+    - A PlainTextResponse object indicating whether the update was successful.
+    """
     if db_handler.update_tickets(event_id, tickets):
         if not tickets:
             return PlainTextResponse("Tickets deleted successfully", status_code=200)
@@ -35,6 +74,16 @@ def is_valid_update(event_id, tickets):
     },
 )
 async def create_tickets_by_event_id(event_id: str, tickets: List[Ticket]):
+    """
+    This endpoint creates tickets for the specified event ID.
+
+    Args:
+    - event_id: A string representing the ID of the event.
+    - tickets: A list of Ticket objects representing the tickets to be created.
+
+    Returns:
+    - A PlainTextResponse object indicating whether the creation was successful.
+    """
     tickets_in_event = db_handler.find_by_event_id(event_id)
     result = []
 
@@ -58,7 +107,15 @@ async def create_tickets_by_event_id(event_id: str, tickets: List[Ticket]):
     },
 )
 async def get_tickets_by_event_id(event_id: str) -> List[Ticket]:
+    """
+    This endpoint retrieves the tickets for the specified event ID.
 
+    Args:
+    - event_id: A string representing the ID of the event.
+
+    Returns:
+    - A list of Ticket objects representing the tickets for the event.
+    """
     if is_valid_event_id(event_id) == 0:
         return []
 
@@ -82,7 +139,16 @@ async def get_tickets_by_event_id(event_id: str) -> List[Ticket]:
     },
 )
 async def update_tickets_by_event_id(event_id: str, tickets: List[Ticket]):
+    """
+    This endpoint updates the tickets for the specified event ID.
 
+    Args:
+    - event_id: A string representing the ID of the event.
+    - tickets: A list of Ticket objects representing the tickets to be updated.
+
+    Returns:
+    - A PlainTextResponse object indicating whether the update was successful.
+    """
     if is_valid_event_id(event_id) == 0:
         return PlainTextResponse("Event not found", status_code=404)
 
@@ -103,7 +169,15 @@ async def update_tickets_by_event_id(event_id: str, tickets: List[Ticket]):
     },
 )
 async def delete_tickets_by_event_id(event_id: str):
+    """
+    This endpoint deletes the tickets for the specified event ID.
 
+    Args:
+    - event_id: A string representing the ID of the event.
+
+    Returns:
+    - A PlainTextResponse object indicating whether the deletion was successful.
+    """
     if is_valid_event_id(event_id) == 0:
         return PlainTextResponse("Event not found", status_code=404)
 
