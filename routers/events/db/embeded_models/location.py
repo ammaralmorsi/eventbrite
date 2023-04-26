@@ -1,5 +1,8 @@
 from enum import Enum
-from pydantic import BaseModel, Field
+from typing import Annotated
+
+from pydantic import BaseModel
+from pydantic import Field
 
 
 class LocationTypeEnum(str, Enum):
@@ -8,14 +11,11 @@ class LocationTypeEnum(str, Enum):
 
 
 class Location(BaseModel):
-    type: LocationTypeEnum = Field(..., description="Type of the location (venue or online)")
-    location: str = Field(None, description="Location string (required if type is venue)")
-
-    class Config:
-        schema_extra = {
-            "example": {
-                "type": "venue",
-                "location": "Example Venue Location"
-            }
-        }
-        orm_mode = True
+    type: Annotated[LocationTypeEnum, Field(
+        description="Type of the location (venue or online)",
+        example="venue",
+    )]
+    location: Annotated[str | None, Field(
+        description="Location string (required if type is venue)",
+        example="123 Main St, San Francisco, CA 94111",
+    )] = None
