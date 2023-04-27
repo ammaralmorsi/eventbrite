@@ -7,8 +7,8 @@ from fastapi.responses import PlainTextResponse
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.security import OAuth2PasswordRequestForm
 
-from .db import models
-from .db.driver import UsersDriver
+from dependencies.models import users
+from dependencies.db.users import UsersDriver
 from .password_handler import PasswordHandler
 from dependencies.token_handler import TokenHandler
 from .email_handler import EmailHandler
@@ -62,13 +62,13 @@ def handle_not_exists_email(email):
         }
     }
 )
-async def signup(user: models.UserInSignup) -> PlainTextResponse:
+async def signup(user: users.UserInSignup) -> PlainTextResponse:
     handle_exists_email(user.email)
 
     user.password = password_handler.get_password_hash(user.password)
     inserted_user: dict = db.create_user(user.dict())
 
-    token = token_handler.encode_token(models.UserToken(**inserted_user), 0.5)
+    token = token_handler.encode_token(users.UserToken(**inserted_user), 0.5)
     email_handler.send_email(user.email, token, EmailType.SIGNUP_VERIFICATION)
 
     return PlainTextResponse("unverified user is created, please verify your email", status_code=status.HTTP_200_OK)
@@ -135,7 +135,7 @@ async def verify_email(token: Annotated[str, Depends(oath2_scheme)]):
     "/login",
     summary="generate access token",
     description="login and get access token",
-    response_model=models.UserOutLogin,
+    response_model=users.UserOutLogin,
     responses={
         status.HTTP_200_OK: {
             "description": "login successfully",
@@ -170,20 +170,20 @@ async def verify_email(token: Annotated[str, Depends(oath2_scheme)]):
         }
     }
 )
-async def login(user_in: Annotated[OAuth2PasswordRequestForm, Depends()]) -> models.UserOutLogin:
-    user_in = models.UserInLogin(email=user_in.username, password=user_in.password)
+async def login(user_in: Annotated[OAuth2PasswordRequestForm, Depends()]) -> users.UserOutLogin:
+    user_in = users.UserInLogin(email=user_in.username, password=user_in.password)
 
     handle_not_exists_email(user_in.email)
-    user_db: models.UserDB = models.UserDB(**db.find_user(user_in.email))
+    user_db: users.UserDB = users.UserDB(**db.find_user(user_in.email))
     if not password_handler.verify_password(user_in.password, user_db.password):
         raise HTTPException(detail="wrong password", status_code=status.HTTP_401_UNAUTHORIZED)
 
-    encoded_token = token_handler.encode_token(models.UserToken(**user_db.dict()))
+    encoded_token = token_handler.encode_token(users.UserToken(**user_db.dict()))
     if not user_db.is_verified:
         email_handler.send_email(user_db.email, encoded_token, EmailType.SIGNUP_VERIFICATION)
         raise HTTPException(detail="email is not verified", status_code=status.HTTP_401_UNAUTHORIZED)
 
-    return models.UserOutLogin(access_token=encoded_token)
+    return users.UserOutLogin(access_token=encoded_token)
 
 
 @router.post(
@@ -216,7 +216,7 @@ async def login(user_in: Annotated[OAuth2PasswordRequestForm, Depends()]) -> mod
 async def forgot_password(email):
     handle_not_exists_email(email)
 
-    encoded_token = token_handler.encode_token(models.UserToken(**db.find_user(email)), 0.5)
+    encoded_token = token_handler.encode_token(users.UserToken(**db.find_user(email)), 0.5)
     email_handler.send_email(email, encoded_token, EmailType.FORGET_PASSWORD)
     return PlainTextResponse("sent a verification email", status_code=status.HTTP_200_OK)
 
@@ -248,7 +248,7 @@ async def forgot_password(email):
     }
 
 )
-async def change_password(token: Annotated[str, Depends(oath2_scheme)], request: models.UserInForgotPassword):
+async def change_password(token: Annotated[str, Depends(oath2_scheme)], request: users.UserInForgotPassword):
     user = token_handler.get_user(token)
 
     handle_not_exists_email(user.email)

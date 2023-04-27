@@ -40,7 +40,6 @@ class EventDriver:
         query = {"location.location": {"$regex": pattern}, "location.type": "venue"}
         return self.find(query)
 
-
     def get_events_sorted_by_date(self):
         query = {"date_and_time.start_date_time": {"$gte": datetime.now()}}
         return self.collection.find(query).sort("date_and_time.start_date_time", 1)

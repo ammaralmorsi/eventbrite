@@ -8,7 +8,7 @@ import jwt
 from fastapi import HTTPException
 from fastapi import status
 
-from routers.auth.db import models
+from dependencies.models import users
 
 
 class TokenHandler:
@@ -16,7 +16,7 @@ class TokenHandler:
         self.secret_key = os.environ.get("JWT_SECRET_KEY")
         self.algorithm = "HS256"
 
-    def encode_token(self, user: models.UserToken, duration=24):
+    def encode_token(self, user: users.UserToken, duration=24):
         expiration_time = datetime.utcnow() + timedelta(hours=duration)
 
         payload = {"exp": expiration_time, "id": str(user.id), "email": user.email}
@@ -28,11 +28,11 @@ class TokenHandler:
         except TypeError as e:
             raise HTTPException(detail="type error", status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    def get_user(self, token) -> models.UserToken:
+    def get_user(self, token) -> users.UserToken:
         try:
             payload = jwt.decode(token, self.secret_key, self.algorithm)
             payload["id"] = ObjectId(payload["id"])    # Convert _id field to ObjectId
-            user = models.UserToken(**payload)
+            user = users.UserToken(**payload)
             expiration_time = datetime.fromtimestamp(payload["exp"])
             if datetime.utcnow() > expiration_time:
                 raise HTTPException(detail="invalid token", status_code=status.HTTP_401_UNAUTHORIZED)
