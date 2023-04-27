@@ -1,7 +1,6 @@
 import re
-import os
 
-from pymongo import MongoClient
+from dependencies.db.client import Client
 
 
 class CategoriesDriver:
@@ -22,9 +21,8 @@ class CategoriesDriver:
         variable, selects the specified database using the MONGO_DB environment variable,
         and initializes the MongoDB collection instance for 'categories'.
         """
-        self.client = MongoClient(os.environ.get("MONGO_URI"))
-        self.db = self.client[os.environ.get("MONGO_DB")]
-        self.collection = self.db['categories']
+        self.db = Client.get_instance().get_db()
+        self.collection = self.db.get_collection("categories")
 
     def insert(self, data):
         """

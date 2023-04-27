@@ -10,11 +10,17 @@ from fastapi import status
 class Client:
     _instance = None
 
+    @staticmethod
+    def get_instance():
+        if not Client._instance:
+            Client()
+        return Client._instance
+
     def __init__(self):
         if not Client._instance:
             try:
-                Client._instance = MongoClient(os.environ.get("MONGO_URI"))
-                self.client = Client._instance
+                Client._instance = self
+                self.client = MongoClient(os.environ.get("MONGO_URI"))
                 self.db = self.client[os.environ.get("MONGO_DB")]
             except mongo_errors.PyMongoError:
                 raise HTTPException(detail="database error", status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)

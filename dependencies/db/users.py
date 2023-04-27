@@ -9,7 +9,7 @@ from dependencies.db.client import Client
 
 class UsersDriver:
     def __init__(self):
-        self.db = Client().get_db()
+        self.db = Client.get_instance().get_db()
         self.collection = self.db["users"]
 
     def create_user(self, user):
