@@ -1,22 +1,16 @@
-import os
-
 from fastapi import HTTPException
 from fastapi import status
 
-from pymongo import MongoClient
 from pymongo import errors as mongo_errors
 
-from .models import UserDB
+from dependencies.models.users import UserDB
+from dependencies.db.client import Client
 
 
 class UsersDriver:
     def __init__(self):
-        try:
-            self.client = MongoClient(os.environ.get("MONGO_URI"))
-            self.db = self.client[os.environ.get("MONGO_DB")]
-            self.collection = self.db["users"]
-        except mongo_errors.PyMongoError:
-            raise HTTPException(detail="database error", status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.db = Client.get_instance().get_db()
+        self.collection = self.db["users"]
 
     def create_user(self, user):
         try:

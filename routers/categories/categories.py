@@ -1,7 +1,8 @@
 from typing import List
 from fastapi import APIRouter
 from starlette.responses import PlainTextResponse
-from .db import driver, models
+from dependencies.models import categories as models
+from dependencies.db import categories as driver
 
 router = APIRouter(
     prefix="/categories",
@@ -25,7 +26,7 @@ async def create_category(category: models.Category):
     Create a new category in the database.
 
     Args:
-        category (models.Category): The category object to be created.
+        category (categories.Category): The category object to be created.
 
     Returns:
         PlainTextResponse: A plain text response indicating successful creation of category.
@@ -49,7 +50,7 @@ async def get_categories():
     Get all categories from the database.
 
     Returns:
-        List[models.Category]: A list of Category objects representing all categories.
+        List[categories.Category]: A list of Category objects representing all categories.
     """
     categories = db_categories_driver.find_all()
     return list(categories)
@@ -74,7 +75,7 @@ async def get_category(category_name: str):
         category_name (str): The name of the category to be retrieved.
 
     Returns:
-        models.Category: A Category object representing the retrieved category.
+        categories.Category: A Category object representing the retrieved category.
     """
     if db_categories_driver.count({"name": category_name}) == 0:
         return PlainTextResponse("Category not found", status_code=404)
