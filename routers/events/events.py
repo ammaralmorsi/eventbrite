@@ -1,11 +1,16 @@
-from fastapi import APIRouter
-from .db.models import Event, EventDB
-from .db.driver import EventDriver
-from fastapi.responses import PlainTextResponse
-from bson import ObjectId
-from typing import List
-from fastapi_pagination import Page, paginate
+from typing import Annotated
 
+from fastapi import status
+from fastapi import Depends
+from fastapi import APIRouter
+from fastapi import HTTPException
+from fastapi.responses import PlainTextResponse
+from fastapi.security import OAuth2PasswordBearer
+
+from dependencies.db.events import EventDriver
+import dependencies.models.users as user_models
+import dependencies.models.events as event_models
+from dependencies.token_handler import TokenHandler
 
 router = APIRouter(
     prefix="/events",
@@ -13,100 +18,155 @@ router = APIRouter(
 )
 
 db_handler = EventDriver()
+token_handler = TokenHandler()
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 
 @router.post(
     "/create",
     summary="Create a new event",
+    responses={
+        status.HTTP_200_OK: {
+            "description": "event created",
+            "content": {
+                "creator_id": "2dg3f4g5h6j7k8l9",
+                "basic_info": {
+                    "title": "Let's be loyal",
+                    "organizer": "Loyalty Organization",
+                    "category": "Loyalty",
+                    "sub_category": "Loyalty"
+                },
+                "image_link": "https://www.example.com/image.png",
+                "summary": "This is a summary of the event",
+                "description": "This is a description of the event",
+                "state": {
+                    "is_public": True,
+                    "publish_date_time": "2023-05-01T09:00:00"
+                },
+                "date_and_time": {
+                    "start_date_time": "2023-05-01T15:30:00",
+                    "end_date_time": "2023-05-01T18:30:00",
+                    "is_display_start_date": True,
+                    "is_display_end_date": True,
+                    "time_zone": "US/Pacific",
+                    "event_page_language": "en-US"
+                },
+                "location": {
+                    "type": "venue",
+                    "location": "123 Main St, San Francisco, CA 94111"
+                },
+                "id": "2dg3f4g5h6j7k8l9"
+            }
+        },
+    }
 )
-async def create_event(event: Event):
-    if db_handler.insert(event.dict()):
-        return PlainTextResponse("Event created successfully", status_code=201)
-    else:
-        return PlainTextResponse("Event creation failed", status_code=500)
+async def create_event(
+        token: Annotated[str, Depends(oauth2_scheme)],
+        event_in: event_models.CreateEventIn
+) -> event_models.EventOut:
+    user: user_models.UserToken = token_handler.get_user(token)
+    return db_handler.create_new_event(event_models.EventDB(**event_in.dict(), creator_id=str(user.id)))
 
 
 @router.get(
     "/id/{event_id}",
     summary="Get an event by id",
+    responses={
+        status.HTTP_200_OK: {
+            "description": "event found",
+            "content": {
+                "creator_id": "2dg3f4g5h6j7k8l9",
+                "basic_info": {
+                    "title": "Let's be loyal",
+                    "organizer": "Loyalty Organization",
+                    "category": "Loyalty",
+                    "sub_category": "Loyalty"
+                },
+                "image_link": "https://www.example.com/image.png",
+                "summary": "This is a summary of the event",
+                "description": "This is a description of the event",
+                "state": {
+                    "is_public": True,
+                    "publish_date_time": "2023-05-01T09:00:00"
+                },
+                "date_and_time": {
+                    "start_date_time": "2023-05-01T15:30:00",
+                    "end_date_time": "2023-05-01T18:30:00",
+                    "is_display_start_date": True,
+                    "is_display_end_date": True,
+                    "time_zone": "US/Pacific",
+                    "event_page_language": "en-US"
+                },
+                "location": {
+                    "type": "venue",
+                    "location": "123 Main St, San Francisco, CA 94111"
+                },
+                "id": "2dg3f4g5h6j7k8l9"
+            }
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "event not found",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "event not found"
+                    }
+                }
+            }
+        },
+    }
 )
-async def get_event(event_id: str):
-    event = db_handler.find_one({"_id": ObjectId(event_id)})
-    if event:
-        out_event = EventDB(**event)
-        out_event.id = str(event["_id"])
-        return out_event
-    else:
-        return PlainTextResponse("Event not found", status_code=404)
-
-
-@router.get(
-    "/title/{event_title}",
-    summary="Get an event by title",
-)
-async def get_event_by_title(event_title: str) -> List[EventDB]:
-    events = db_handler.find_by_title({"title": event_title})
-    result = []
-    for event in events:
-        event_out = EventDB(**event)
-        event_out.id = str(event["_id"])
-        result.append(event_out)
-    return result
-
-
-@router.get(
-    "/category/{category_name}",
-    summary="Get events by category",
-)
-async def get_event_by_category(category_name: str) -> List[EventDB]:
-    events = db_handler.find_by_category({"category": category_name})
-    result = []
-    for event in events:
-        event_out = EventDB(**event)
-        event_out.id = str(event["_id"])
-        result.append(event_out)
-    return result
+async def get_event(
+        token: Annotated[str, Depends(oauth2_scheme)],
+        event_id: str
+) -> event_models.EventOut:
+    user = token_handler.get_user(token)
+    return db_handler.get_event_by_id(event_id)
 
 
 @router.delete(
     "/id/{event_id}",
-    summary="Delete an event by id",
+    summary="Delete an event by id only if the token user is the creator",
+    responses={
+        status.HTTP_200_OK: {
+            "description": "event deleted successfully",
+            "content": {
+                "text/plain": {
+                    "example": "Event deleted successfully"
+                },
+            }
+        },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "user is not the creator",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "user is not the creator"
+                    }
+                }
+            }
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "event not found",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "event not found"
+                    }
+                }
+            }
+        },
+    }
 )
-async def delete_event_by_id(event_id: str):
-    if db_handler.count({"_id": ObjectId(event_id)}) == 0:
-        return PlainTextResponse("Event not found", status_code=404)
+async def delete_event(
+        token: Annotated[str, Depends(oauth2_scheme)],
+        event_id: str
+) -> PlainTextResponse:
+    user = token_handler.get_user(token)
+    event: event_models.EventOut = db_handler.get_event_by_id(event_id)
 
-    if db_handler.delete({"_id": ObjectId(event_id)}):
-        return PlainTextResponse("Event deleted successfully", status_code=200)
-    else:
-        return PlainTextResponse("Event deletion failed", status_code=500)
+    if event.creator_id != str(user.id):
+        raise HTTPException(detail="user is not the creator", status_code=status.HTTP_401_UNAUTHORIZED)
 
-
-@router.get(
-    "/location/{event_location}",
-    summary="Get events by location",
-)
-async def get_event_by_location(event_location: str) -> List[EventDB]:
-    events = db_handler.find_by_location({"location": event_location})
-    result = []
-    for event in events:
-        event_out = EventDB(**event)
-        event_out.id = str(event["_id"])
-        result.append(event_out)
-    return result
-
-
-
-@router.get(
-    "/date",
-    summary="Get events sorted by date",
-    response_model=Page[EventDB],
-)
-async def get_event_by_date():
-    events = db_handler.get_events_sorted_by_date()
-    result = []
-    for event in events:
-        event_out = EventDB(**event)
-        event_out.id = str(event["_id"])
-        result.append(event_out)
-    return paginate(result)
+    db_handler.delete_event_by_id(event_id)
+    return PlainTextResponse("Event deleted successfully", status_code=200)
