@@ -19,6 +19,9 @@ Endpoints:
 from typing import List
 from fastapi import APIRouter
 from fastapi.responses import PlainTextResponse
+from typing import List
+from bson import ObjectId
+from fastapi import APIRouter
 from .db.driver import TicketDriver
 from ..events.db.embeded_models.ticket import Ticket
 
@@ -154,6 +157,7 @@ async def update_tickets_by_event_id(event_id: str, tickets: List[Ticket]):
     """
     if is_valid_event_id(event_id) == 0:
         return PlainTextResponse("Event not found", status_code=404)
+
 
     tickets_as_dicts = [ticket.dict() for ticket in tickets]
     for ticket in tickets_as_dicts:

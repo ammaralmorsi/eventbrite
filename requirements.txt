@@ -1,0 +1,8 @@
+fastapi[all]~=0.95.0
+pymongo~=4.3.3
+pydantic~=1.10.7
+starlette~=0.26.1
+setuptools~=65.6.3
+pyjwt~=2.6.0
+passlib[bcrypt]~=1.7.4
+fastapi-pagination~=0.12.2

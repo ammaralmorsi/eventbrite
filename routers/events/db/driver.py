@@ -1,6 +1,7 @@
 import os
 import re
 from pymongo import MongoClient
+from datetime import datetime
 
 
 class EventDriver:
@@ -20,6 +21,8 @@ class EventDriver:
         find_by_category(query): Find documents in the events collection based on a category query.
         count(query): Count the number of documents in the events collection based on a query.
         delete(query): Delete a document from the events collection based on a query.
+        find_by_location(query): Find documents in the events collection based on a location query.
+        get_events_by_date(query): Find documents in the events collection based on a date query.
     """
 
     def __init__(self):
@@ -118,3 +121,27 @@ class EventDriver:
         """
         return self.collection.delete_one(query)
 
+    def find_by_location(self, query):
+        """
+        Find documents in the events collection based on a location query.
+
+        Args:
+            query (dict): Query containing the location to filter documents in the events collection.
+
+        Returns:
+            pymongo.cursor.Cursor: Cursor to iterate over the documents returned by the location query.
+        """
+        pattern = re.compile(".*{}.*".format(re.escape(query["location"])), re.IGNORECASE)
+        query = {"location.location": {"$regex": pattern}, "location.type": "venue"}
+        return self.find(query)
+
+
+    def get_events_sorted_by_date(self):
+        """
+        Find documents in the events collection sorted by date.
+
+        Returns:
+            pymongo.cursor.Cursor: Cursor to iterate over the documents returned by the date query.
+        """
+        query = {"date_and_time.start_date_time": {"$gte": datetime.now()}}
+        return self.collection.find(query).sort("date_and_time.start_date_time", 1)
