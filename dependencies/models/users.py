@@ -44,6 +44,11 @@ class UserInSignup(BaseModel):
     firstname: firstname_type
     lastname: lastname_type
 
+class UserInGetInfo(BaseModel):
+    email: email_type
+    firstname: firstname_type
+    lastname: lastname_type
+    avatar_url: avatar_url_type
 
 class UserInLogin(BaseModel):
     email: email_type

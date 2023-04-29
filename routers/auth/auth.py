@@ -288,3 +288,52 @@ async def check_email(email):
     handle_not_exists_email(email)
 
     return PlainTextResponse("email is available", status_code=status.HTTP_200_OK)
+
+@router.get(
+    "/user/me",
+    summary="get user information",
+    description="get the user firstname, lastname and avatar",
+    response_model=users.UserInGetInfo,
+    responses={
+        status.HTTP_200_OK: {
+            "description": "login successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "email": "eventbrite@email.com",
+                        "firstname": "Event",
+                        "lastname": "Brite",
+                        "avatar": "avatar image link"
+                    }
+                }
+            }
+        },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "wrong password or email is not verified",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "wrong email or token is not valid",
+                    }
+                }
+            },
+            status.HTTP_404_NOT_FOUND: {
+                "description": "email not found",
+                "content": {
+                    "application/json": {
+                        "example": {
+                            "detail": "email not found"
+                        }
+                    }
+                }
+            }
+        }
+    }
+)
+async def get_info(token: Annotated[str, Depends(oath2_scheme)]):
+    user = token_handler.get_user(token)
+    handle_not_exists_email(user.email)
+    db_user = db.find_user(user.email)
+    return users.UserInGetInfo(**db_user)
+
+
