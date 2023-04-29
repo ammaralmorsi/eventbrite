@@ -336,4 +336,45 @@ async def get_info(token: Annotated[str, Depends(oath2_scheme)]):
     db_user = db.find_user(user.email)
     return users.UserInGetInfo(**db_user)
 
+@router.get(
+    "/get-avatar",
+    summary="get the the avatar of the email sent whether it is verified or not",
+    response_model=users.UserAvatarOnly,
+    responses={
+            status.HTTP_200_OK: {
+                "description": "login successfully",
+                "content": {
+                    "application/json": {
+                        "example": {
+                            "avatar": "avatar image link"
+                        }
+                    }
+                }
+            },
+            status.HTTP_401_UNAUTHORIZED: {
+                "description": "wrong password or email is not verified",
+                "content": {
+                    "application/json": {
+                        "example": {
+                            "detail": "wrong email",
+                        }
+                    }
+                },
+                status.HTTP_404_NOT_FOUND: {
+                    "description": "email not found",
+                    "content": {
+                        "application/json": {
+                            "example": {
+                                "detail": "email not found"
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
+    )
+async def get_avatar(email):
+    handle_not_exists_email(email)
+    db_user = db.find_user(email)
+    return users.UserAvatarOnly(**db_user)

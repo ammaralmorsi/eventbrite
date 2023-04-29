@@ -68,6 +68,8 @@ class UserOutLogin(BaseModel):
     access_token: str
     token_type: str = "bearer"
 
+class UserAvatarOnly(BaseModel):
+    avatar_url: avatar_url_type
 
 class UserToken(BaseModel):
     id: ObjectId = Field(default_factory=ObjectId, alias="_id")
