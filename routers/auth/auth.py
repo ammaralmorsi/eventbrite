@@ -1,3 +1,4 @@
+from crypt import methods
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
@@ -256,6 +257,48 @@ async def change_password(token: Annotated[str, Depends(oath2_scheme)], request:
 
     db.update_password(user.email, new_password)
     return PlainTextResponse("password updated successfully", status_code=status.HTTP_200_OK)
+
+
+@router.put(
+    "/update-password",
+    summary="reset password",
+    description="given a token, reset the password",
+    response_class=PlainTextResponse,
+    responses={
+        status.HTTP_200_OK: {
+            "description": "password updated successfully",
+            "content": {
+                "text/plain": {
+                    "example": "password updated successfully"
+                },
+            }
+        },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "invalid token",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "invalid token"
+                    }
+                }
+            }
+        }
+    }
+)
+async def update_password(token: Annotated[str, Depends(oath2_scheme)], request: users.UserInResetPassword):
+    user = token_handler.get_user(token)
+
+    handle_not_exists_email(user.email)
+    db_user = db.find_user(user.email)
+
+    if not password_handler.verify_password(request.old_password, db_user["password"]):
+        raise HTTPException(detail="password is incorrect", status_code=status.HTTP_401_UNAUTHORIZED)
+    new_password_hashed = password_handler.get_password_hash(request.new_password)
+    db.update_password(user.email, new_password_hashed)
+    return PlainTextResponse("password updated successfully", status_code=status.HTTP_200_OK)
+
+
+
 
 
 @router.post(

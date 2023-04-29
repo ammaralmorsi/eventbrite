@@ -58,6 +58,9 @@ class UserInLogin(BaseModel):
 class UserInForgotPassword(BaseModel):
     new_password: password_type
 
+class UserInResetPassword(BaseModel):
+    old_password: password_type
+    new_password: password_type
 
 class UserDB(UserInSignup):
     is_verified: is_verified_type | bool = False
