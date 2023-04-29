@@ -378,3 +378,52 @@ async def get_avatar(email):
     handle_not_exists_email(email)
     db_user = db.find_user(email)
     return users.UserAvatarOnly(**db_user)
+
+@router.get(
+    "/get-user-by-id/{user_id}",
+    summary="get user information by id",
+    description="get the user firstname, lastname and avatar",
+    response_model=users.UserInGetInfo,
+    responses={
+        status.HTTP_200_OK: {
+            "description": "login successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "email": "eventbrite@email.com",
+                        "firstname": "Event",
+                        "lastname": "Brite",
+                        "avatar": "avatar image link"
+                    }
+                }
+            }
+        },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "wrong password or email is not verified",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "wrong email or token is not valid",
+                    }
+                }
+            },
+            status.HTTP_404_NOT_FOUND: {
+                "description": "email not found",
+                "content": {
+                    "application/json": {
+                        "example": {
+                            "detail": "email not found"
+                        }
+                    }
+                }
+            }
+        }
+    }
+)
+async def get_user_by_id(user_id):
+    try:
+        db_user = db.get_user_by_id(user_id)
+        return users.UserInGetInfo(**db_user)
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="the value of the user id is wrong")
+

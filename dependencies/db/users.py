@@ -1,3 +1,4 @@
+from bson import ObjectId
 from fastapi import HTTPException
 from fastapi import status
 
@@ -42,5 +43,12 @@ class UsersDriver:
     def update_password(self, email, password):
         try:
             return self.collection.update_one({"email": email}, {"$set": {"password": password}})
+        except mongo_errors.PyMongoError:
+            raise HTTPException(detail="database error", status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def get_user_by_id(self, user_id):
+        try:
+            id_as_ObjectId = ObjectId(user_id)
+            return self.collection.find_one({"_id": id_as_ObjectId})
         except mongo_errors.PyMongoError:
             raise HTTPException(detail="database error", status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
