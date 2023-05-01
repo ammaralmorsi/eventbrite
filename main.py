@@ -5,6 +5,7 @@ from fastapi_pagination import add_pagination
 from routers.categories import categories
 from routers.auth import auth
 from routers.events import events
+from routers.users import users
 
 
 app = FastAPI(
@@ -27,6 +28,7 @@ app.add_middleware(
 app.include_router(categories.router)
 app.include_router(auth.router)
 app.include_router(events.router)
+app.include_router(users.router)
 
 
 add_pagination(app)

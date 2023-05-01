@@ -9,6 +9,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from dependencies.models import users
 from dependencies.db.users import UsersDriver
+from dependencies.utils.users import handle_exists_email, handle_not_exists_email
 from .password_handler import PasswordHandler
 from dependencies.token_handler import TokenHandler
 from .email_handler import EmailHandler
@@ -24,16 +25,6 @@ token_handler = TokenHandler()
 email_handler = EmailHandler()
 db = UsersDriver()
 oath2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
-
-
-def handle_exists_email(email):
-    if db.email_exists(email):
-        raise HTTPException(detail="email already exists", status_code=status.HTTP_406_NOT_ACCEPTABLE)
-
-
-def handle_not_exists_email(email):
-    if not db.email_exists(email):
-        raise HTTPException(detail="email not found", status_code=status.HTTP_404_NOT_FOUND)
 
 
 @router.post(
@@ -66,9 +57,9 @@ async def signup(user: users.UserInSignup) -> PlainTextResponse:
     handle_exists_email(user.email)
 
     user.password = password_handler.get_password_hash(user.password)
-    inserted_user: dict = db.create_user(user.dict())
+    inserted_user: users.UserOut = db.create_user(user)
 
-    token = token_handler.encode_token(users.UserToken(**inserted_user), 0.5)
+    token = token_handler.encode_token(users.UserToken(**inserted_user.dict()), 0.5)
     email_handler.send_email(user.email, token, EmailType.SIGNUP_VERIFICATION)
 
     return PlainTextResponse("unverified user is created, please verify your email", status_code=status.HTTP_200_OK)
@@ -174,7 +165,8 @@ async def login(user_in: Annotated[OAuth2PasswordRequestForm, Depends()]) -> use
     user_in = users.UserInLogin(email=user_in.username, password=user_in.password)
 
     handle_not_exists_email(user_in.email)
-    user_db: users.UserDB = users.UserDB(**db.find_user(user_in.email))
+    user_db: users.UserOut = db.get_user_by_email(user_in.email)
+
     if not password_handler.verify_password(user_in.password, user_db.password):
         raise HTTPException(detail="wrong password", status_code=status.HTTP_401_UNAUTHORIZED)
 
@@ -216,7 +208,8 @@ async def login(user_in: Annotated[OAuth2PasswordRequestForm, Depends()]) -> use
 async def forgot_password(email):
     handle_not_exists_email(email)
 
-    encoded_token = token_handler.encode_token(users.UserToken(**db.find_user(email)), 0.5)
+    user_out: users.UserOut = db.get_user_by_email(email)
+    encoded_token = token_handler.encode_token(users.UserToken(**user_out.dict()), 0.5)
     email_handler.send_email(email, encoded_token, EmailType.FORGET_PASSWORD)
     return PlainTextResponse("sent a verification email", status_code=status.HTTP_200_OK)
 
@@ -284,188 +277,14 @@ async def change_password(token: Annotated[str, Depends(oath2_scheme)], request:
         }
     }
 )
-async def update_password(token: Annotated[str, Depends(oath2_scheme)], request: users.UserInResetPassword):
+async def update_password(token: Annotated[str, Depends(oath2_scheme)], request: users.UserInUpdatePassword):
     user = token_handler.get_user(token)
 
     handle_not_exists_email(user.email)
-    db_user = db.find_user(user.email)
+    db_user: users.UserOut = db.get_user_by_email(user.email)
 
-    if not password_handler.verify_password(request.old_password, db_user["password"]):
+    if not password_handler.verify_password(request.old_password, db_user.password):
         raise HTTPException(detail="password is incorrect", status_code=status.HTTP_401_UNAUTHORIZED)
     new_password_hashed = password_handler.get_password_hash(request.new_password)
     db.update_password(user.email, new_password_hashed)
     return PlainTextResponse("password updated successfully", status_code=status.HTTP_200_OK)
-
-
-
-
-
-@router.post(
-    "/check-email",
-    summary="check if email is available",
-    description="check if email is available",
-    response_class=PlainTextResponse,
-    responses={
-        status.HTTP_200_OK: {
-            "description": "email is available",
-            "content": {
-                "text/plain": {
-                    "example": "email is available"
-                },
-            }
-        },
-        status.HTTP_404_NOT_FOUND: {
-            "description": "email not found",
-            "content": {
-                "application/json": {
-                    "example": {
-                        "detail": "email not found"
-                    }
-                }
-            }
-        }
-    }
-)
-async def check_email(email):
-    handle_not_exists_email(email)
-
-    return PlainTextResponse("email is available", status_code=status.HTTP_200_OK)
-
-@router.get(
-    "/user/me",
-    summary="get user information",
-    description="get the user firstname, lastname and avatar",
-    response_model=users.UserInGetInfo,
-    responses={
-        status.HTTP_200_OK: {
-            "description": "login successfully",
-            "content": {
-                "application/json": {
-                    "example": {
-                        "email": "eventbrite@email.com",
-                        "firstname": "Event",
-                        "lastname": "Brite",
-                        "avatar": "avatar image link"
-                    }
-                }
-            }
-        },
-        status.HTTP_401_UNAUTHORIZED: {
-            "description": "wrong password or email is not verified",
-            "content": {
-                "application/json": {
-                    "example": {
-                        "detail": "wrong email or token is not valid",
-                    }
-                }
-            },
-            status.HTTP_404_NOT_FOUND: {
-                "description": "email not found",
-                "content": {
-                    "application/json": {
-                        "example": {
-                            "detail": "email not found"
-                        }
-                    }
-                }
-            }
-        }
-    }
-)
-async def get_info(token: Annotated[str, Depends(oath2_scheme)]):
-    user = token_handler.get_user(token)
-    handle_not_exists_email(user.email)
-    db_user = db.find_user(user.email)
-    return users.UserInGetInfo(**db_user)
-
-@router.get(
-    "/get-avatar",
-    summary="get the the avatar of the email sent whether it is verified or not",
-    response_model=users.UserAvatarOnly,
-    responses={
-            status.HTTP_200_OK: {
-                "description": "login successfully",
-                "content": {
-                    "application/json": {
-                        "example": {
-                            "avatar": "avatar image link"
-                        }
-                    }
-                }
-            },
-            status.HTTP_401_UNAUTHORIZED: {
-                "description": "wrong password or email is not verified",
-                "content": {
-                    "application/json": {
-                        "example": {
-                            "detail": "wrong email",
-                        }
-                    }
-                },
-                status.HTTP_404_NOT_FOUND: {
-                    "description": "email not found",
-                    "content": {
-                        "application/json": {
-                            "example": {
-                                "detail": "email not found"
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-    )
-async def get_avatar(email):
-    handle_not_exists_email(email)
-    db_user = db.find_user(email)
-    return users.UserAvatarOnly(**db_user)
-
-@router.get(
-    "/get-user-by-id/{user_id}",
-    summary="get user information by id",
-    description="get the user firstname, lastname and avatar",
-    response_model=users.UserInGetInfo,
-    responses={
-        status.HTTP_200_OK: {
-            "description": "login successfully",
-            "content": {
-                "application/json": {
-                    "example": {
-                        "email": "eventbrite@email.com",
-                        "firstname": "Event",
-                        "lastname": "Brite",
-                        "avatar": "avatar image link"
-                    }
-                }
-            }
-        },
-        status.HTTP_401_UNAUTHORIZED: {
-            "description": "wrong password or email is not verified",
-            "content": {
-                "application/json": {
-                    "example": {
-                        "detail": "wrong email or token is not valid",
-                    }
-                }
-            },
-            status.HTTP_404_NOT_FOUND: {
-                "description": "email not found",
-                "content": {
-                    "application/json": {
-                        "example": {
-                            "detail": "email not found"
-                        }
-                    }
-                }
-            }
-        }
-    }
-)
-async def get_user_by_id(user_id):
-    try:
-        db_user = db.get_user_by_id(user_id)
-        return users.UserInGetInfo(**db_user)
-    except Exception as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="the value of the user id is wrong")
-
