@@ -1,7 +1,6 @@
 import os
 from datetime import datetime
 from datetime import timedelta
-from bson import ObjectId
 
 import jwt
 
@@ -9,6 +8,10 @@ from fastapi import HTTPException
 from fastapi import status
 
 from dependencies.models import users
+from dependencies.db import users as users_db
+
+
+users_driver = users_db.UsersDriver()
 
 
 class TokenHandler:
@@ -18,8 +21,8 @@ class TokenHandler:
 
     def encode_token(self, user: users.UserToken, duration=24):
         expiration_time = datetime.utcnow() + timedelta(hours=duration)
-
-        payload = {"exp": expiration_time, "id": str(user.id), "email": user.email}
+        start_time = datetime.utcnow().timestamp()
+        payload = {"start": start_time, "exp": expiration_time, "id": user.id, "email": user.email}
 
         try:
             return jwt.encode(payload, self.secret_key, self.algorithm)
@@ -31,10 +34,11 @@ class TokenHandler:
     def get_user(self, token) -> users.UserToken:
         try:
             payload = jwt.decode(token, self.secret_key, self.algorithm)
-            payload["id"] = ObjectId(payload["id"])    # Convert _id field to ObjectId
+            last_updated_time = users_driver.get_last_password_update_time(payload["id"])
             user = users.UserToken(**payload)
             expiration_time = datetime.fromtimestamp(payload["exp"])
-            if datetime.utcnow() > expiration_time:
+            start_time = datetime.fromtimestamp(payload["start"])
+            if datetime.utcnow() > expiration_time or start_time < last_updated_time:
                 raise HTTPException(detail="invalid token", status_code=status.HTTP_401_UNAUTHORIZED)
 
         except jwt.exceptions.DecodeError as e:

@@ -1,4 +1,4 @@
-_# EventBrite
+# EventBrite
 
 EventBrite is an online event registration service that allows users to find and register for events, and allows event
 organizers to plan and promote their events.

@@ -65,7 +65,7 @@ async def create_event(
         event_in: event_models.CreateEventIn
 ) -> event_models.EventOut:
     user: user_models.UserToken = token_handler.get_user(token)
-    return db_handler.create_new_event(event_models.EventDB(**event_in.dict(), creator_id=str(user.id)))
+    return db_handler.create_new_event(event_models.EventDB(**event_in.dict(), creator_id=user.id))
 
 
 @router.get(
@@ -165,7 +165,7 @@ async def delete_event(
     user = token_handler.get_user(token)
     event: event_models.EventOut = db_handler.get_event_by_id(event_id)
 
-    if event.creator_id != str(user.id):
+    if event.creator_id != user.id:
         raise HTTPException(detail="user is not the creator", status_code=status.HTTP_401_UNAUTHORIZED)
 
     db_handler.delete_event_by_id(event_id)
