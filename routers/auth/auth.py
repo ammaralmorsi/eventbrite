@@ -1,4 +1,3 @@
-from crypt import methods
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
