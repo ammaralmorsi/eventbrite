@@ -55,6 +55,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
                     "type": "venue",
                     "location": "123 Main St, San Francisco, CA 94111"
                 },
+                "city": "San Francisco",
                 "id": "2dg3f4g5h6j7k8l9"
             }
         },
@@ -101,6 +102,7 @@ async def create_event(
                     "type": "venue",
                     "location": "123 Main St, San Francisco, CA 94111"
                 },
+                "city": "San Francisco",
                 "id": "2dg3f4g5h6j7k8l9"
             }
         },
@@ -157,6 +159,7 @@ async def get_event(
                     "type": "venue",
                     "location": "123 Main St, San Francisco, CA 94111"
                 },
+                "city": "San Francisco",
                 "id": "2dg3f4g5h6j7k8l9"
             }
         },

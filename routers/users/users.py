@@ -397,7 +397,46 @@ async def follow_user(user_id:str , token: Annotated[str, Depends(oauth2_scheme)
     "/{user_id}/unfollow",
     summary="unfollow a user",
     description="unfollow a user",
-
+    responses={
+        status.HTTP_200_OK: {
+            "description": "user unfollowed",
+            "content": {
+                "text/plain": {
+                    "example": "user unfollowed"
+                },
+            }
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "user not found",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "user not found"
+                    }
+                }
+            }
+        },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "invalid token",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "invalid toked"
+                    }
+                }
+            }
+        },
+        status.HTTP_400_BAD_REQUEST: {
+            "description": "user is not followed",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "user is not followed"
+                    }
+                }
+            }
+        }
+    }
 )
 async def unfollow_user(user_id:str , token: Annotated[str, Depends(oauth2_scheme)]):
     user = token_handler.get_user(token)

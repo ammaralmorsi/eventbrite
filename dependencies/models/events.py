@@ -114,6 +114,10 @@ id_type = Annotated[str, Field(
     description="ID in db",
     example="2dg3f4g5h6j7k8l9",
 )]
+city_type = Annotated[str, Field(
+    description="City of the event",
+    example="San Francisco",
+)]
 
 
 class CreateEventIn(BaseModel):
@@ -125,7 +129,7 @@ class CreateEventIn(BaseModel):
     date_and_time: date_and_time_type
     location: location_type
     tickets: tickets_type
-
+    city: city_type
 
 class EventDB(BaseModel):
     creator_id: id_type
@@ -136,7 +140,7 @@ class EventDB(BaseModel):
     state: state_type
     date_and_time: date_and_time_type
     location: location_type
-
+    city: city_type
 
 class EventOut(EventDB):
     id: id_type
