@@ -16,6 +16,13 @@ class UsersDriver:
         self.db = Client.get_instance().get_db()
         self.collection = self.db["users"]
 
+    @staticmethod
+    def validate_user_id(user_id: str):
+        try:
+            return ObjectId(user_id)
+        except InvalidId:
+            raise HTTPException(detail="invalid user id", status_code=status.HTTP_400_BAD_REQUEST)
+
     def create_user(self, user: users.UserInSignup) -> users.UserOut:
         try:
             user_db = users.UserDB(last_password_update=datetime.utcnow(), **user.dict())
@@ -53,22 +60,16 @@ class UsersDriver:
         except mongo_errors.PyMongoError:
             raise HTTPException(detail="database error", status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    def get_user_by_id(self, user_id):
+    def get_user_by_id(self, user_id: str):
+        user_id = self.validate_user_id(user_id)
         try:
-            try:
-                user_id = ObjectId(user_id)
-            except TypeError or InvalidId:
-                raise HTTPException(detail="invalid user id", status_code=status.HTTP_400_BAD_REQUEST)
-            return self.collection.find_one({"_id": ObjectId(user_id)})
+            return self.collection.find_one({"_id": user_id})
         except mongo_errors.PyMongoError:
             raise HTTPException(detail="database error", status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def get_last_password_update_time(self, user_id: str):
+        user_id = self.validate_user_id(user_id)
         try:
-            try:
-                user_id = ObjectId(user_id)
-            except TypeError or InvalidId:
-                raise HTTPException(detail="invalid user id", status_code=status.HTTP_400_BAD_REQUEST)
-            return self.collection.find_one({"_id": ObjectId(user_id)})["last_password_update"]
+            return self.collection.find_one({"_id": user_id})["last_password_update"]
         except mongo_errors.PyMongoError:
             raise HTTPException(detail="database error", status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -4,7 +4,7 @@ from dependencies.db.client import Client
 from dependencies.models.follow import FollowIn, FollowDB
 
 
-class LikesDriver:
+class FollowsDriver:
     def __init__(self):
         self.db = Client().get_instance().get_db()
         self.collection = self.db["follow"]

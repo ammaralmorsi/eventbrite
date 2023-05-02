@@ -6,7 +6,9 @@ from fastapi.responses import PlainTextResponse
 from fastapi.security import OAuth2PasswordBearer
 
 from dependencies.db.users import UsersDriver
-from dependencies.db.events import EventsDriver
+from dependencies.db.events import EventDriver
+from dependencies.db.likes import LikesDriver
+from dependencies.db.follow import FollowsDriver
 from dependencies.models import users
 from dependencies.models import likes
 from dependencies.models import follow
@@ -21,8 +23,9 @@ router = APIRouter(
 db = UsersDriver()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 token_handler = TokenHandler()
-
-event_driver = EventsDriver()
+likes_driver = LikesDriver()
+event_driver = EventDriver()
+follows_driver = FollowsDriver()
 
 def get_user_info(user_id: str) -> users.UserInfo:
     db_user = db.get_user_by_id(user_id)
@@ -203,13 +206,13 @@ async def get_info(token: Annotated[str, Depends(oauth2_scheme)]) -> users.UserI
         }
     }
 )
-async def like_event(event_id:str , token: Annotated[str, Depends(oauth2_scheme)]):
+async def like_event(event_id: str, token: Annotated[str, Depends(oauth2_scheme)]):
     user = token_handler.get_user(token)
     event_driver.get_event_by_id(event_id) 
     like_db = likes.LikeDB(event_id=event_id, user_id=user.id)
-    if db.is_event_liked(like_db) :
+    if likes_driver.is_event_liked(like_db):
         raise HTTPException(detail="event is already liked", status_code=status.HTTP_400_BAD_REQUEST) #check if event exists
-    db.like_event(like_db)
+    likes_driver.like_event(like_db)
     return PlainTextResponse("event liked", status_code=status.HTTP_200_OK)
 
 @router.delete(
@@ -257,13 +260,13 @@ async def like_event(event_id:str , token: Annotated[str, Depends(oauth2_scheme)
         }
     }
 )
-async def unlike_event(event_id:str , token: Annotated[str, Depends(oauth2_scheme)]):
+async def unlike_event(event_id: str, token: Annotated[str, Depends(oauth2_scheme)]):
     user = token_handler.get_user(token)
     event_driver.get_event_by_id(event_id)
     like_db = likes.LikeDB(event_id=event_id, user_id=user.id)
-    if not db.is_event_liked(like_db) :
+    if not likes_driver.is_event_liked(like_db) :
         raise HTTPException(detail="event is not liked", status_code=status.HTTP_400_BAD_REQUEST)
-    db.unlike_event(like_db)
+    likes_driver.unlike_event(like_db)
     return PlainTextResponse("event unliked", status_code=status.HTTP_200_OK)
 
 @router.get(
@@ -297,7 +300,7 @@ async def unlike_event(event_id:str , token: Annotated[str, Depends(oauth2_schem
 )
 async def get_liked_events(token: Annotated[str, Depends(oauth2_scheme)]) -> list[str]:
     user = token_handler.get_user(token)
-    return db.get_liked_events(user.id)
+    return likes_driver.get_liked_events(user.id)
 
 @router.get(
     "/me/{event_id}/is_event_liked",
@@ -337,7 +340,7 @@ async def get_liked_events(token: Annotated[str, Depends(oauth2_scheme)]) -> lis
 async def is_event_liked(event_id:str , token: Annotated[str, Depends(oauth2_scheme)]):
     user = token_handler.get_user(token)
     like_db = likes.LikeDB(event_id=event_id, user_id=user.id)
-    return db.is_event_liked(like_db)
+    return likes_driver.is_event_liked(like_db)
 
 
 @router.post(
@@ -388,9 +391,9 @@ async def is_event_liked(event_id:str , token: Annotated[str, Depends(oauth2_sch
 async def follow_user(user_id:str , token: Annotated[str, Depends(oauth2_scheme)]):
     user = token_handler.get_user(token)
     follow_db = follow.FollowDB(followed_id=user_id, follower_id=user.id)
-    if db.is_user_followed(follow_db):
+    if follows_driver.is_user_followed(follow_db):
         raise HTTPException(detail="user is already followed", status_code=status.HTTP_400_BAD_REQUEST)
-    db.follow_user(follow_db)
+    follows_driver.follow_user(follow_db)
     return PlainTextResponse("user followed", status_code=status.HTTP_200_OK)
 
 @router.delete(
@@ -441,9 +444,9 @@ async def follow_user(user_id:str , token: Annotated[str, Depends(oauth2_scheme)
 async def unfollow_user(user_id:str , token: Annotated[str, Depends(oauth2_scheme)]):
     user = token_handler.get_user(token)
     follow_db = follow.FollowDB(followed_id=user_id, follower_id=user.id)
-    if not db.is_user_followed(follow_db):
+    if not follows_driver.is_user_followed(follow_db):
         raise HTTPException(detail="user is not followed", status_code=status.HTTP_400_BAD_REQUEST)
-    db.unfollow_user(follow_db)
+    follows_driver.unfollow_user(follow_db)
     return PlainTextResponse("user unfollowed", status_code=status.HTTP_200_OK)
 
 @router.get(
@@ -476,5 +479,5 @@ async def unfollow_user(user_id:str , token: Annotated[str, Depends(oauth2_schem
 )
 async def get_followed_users(token: Annotated[str, Depends(oauth2_scheme)]) -> list[str]:
     user = token_handler.get_user(token)
-    followed_users = db.get_followed_users(user.id)
+    followed_users = follows_driver.get_followed_users(user.id)
     return followed_users
