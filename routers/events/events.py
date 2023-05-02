@@ -122,11 +122,60 @@ async def get_event(
 ) -> event_models.EventOut:
     user = token_handler.get_user(token)
     return db_handler.get_event_by_id(event_id)
+
 #if token not needed
-# async def get_event(
-#         event_id: str
-# ) -> event_models.EventOut:
-#     return db_handler.get_event_by_id(event_id)
+@router.get(
+    "/{event_id}",
+    summary="Get an event by id",
+    responses={
+        status.HTTP_200_OK: {
+            "description": "event found",
+            "content": {
+                "creator_id": "2dg3f4g5h6j7k8l9",
+                "basic_info": {
+                    "title": "Let's be loyal",
+                    "organizer": "Loyalty Organization",
+                    "category": "Loyalty",
+                    "sub_category": "Loyalty"
+                },
+                "image_link": "https://www.example.com/image.png",
+                "summary": "This is a summary of the event",
+                "description": "This is a description of the event",
+                "state": {
+                    "is_public": True,
+                    "publish_date_time": "2023-05-01T09:00:00"
+                },
+                "date_and_time": {
+                    "start_date_time": "2023-05-01T15:30:00",
+                    "end_date_time": "2023-05-01T18:30:00",
+                    "is_display_start_date": True,
+                    "is_display_end_date": True,
+                    "time_zone": "US/Pacific",
+                    "event_page_language": "en-US"
+                },
+                "location": {
+                    "type": "venue",
+                    "location": "123 Main St, San Francisco, CA 94111"
+                },
+                "id": "2dg3f4g5h6j7k8l9"
+            }
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "event not found",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "event not found"
+                    }
+                }
+            }
+        },
+    }
+)
+async def get_event(
+        event_id: str
+) -> event_models.EventOut:
+    return db_handler.get_event_by_id(event_id)
 
 @router.delete(
     "/id/{event_id}",
