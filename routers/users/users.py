@@ -299,6 +299,47 @@ async def get_liked_events(token: Annotated[str, Depends(oauth2_scheme)]) -> lis
     user = token_handler.get_user(token)
     return db.get_liked_events(user.id)
 
+@router.get(
+    "/me/{event_id}/is_event_liked",
+    summary="check if event is liked",
+    description="check if event is liked",
+    responses={
+        status.HTTP_200_OK: {
+            "description": "event is liked",
+            "content": {
+                "application/json": {
+                    "example": True
+                },
+            }
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "event not found",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "event not found"
+                    }
+                }
+            }
+        },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "invalid token",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "invalid toked"
+                    }
+                }
+            }
+        }
+    }
+)
+async def is_event_liked(event_id:str , token: Annotated[str, Depends(oauth2_scheme)]):
+    user = token_handler.get_user(token)
+    like_db = likes.LikeDB(event_id=event_id, user_id=user.id)
+    return db.is_event_liked(like_db)
+
+
 @router.post(
     "/{user_id}/follow",
     summary="follow a user",
