@@ -6,7 +6,9 @@ from fastapi.responses import PlainTextResponse
 from fastapi.security import OAuth2PasswordBearer
 
 from dependencies.db.users import UsersDriver
+from dependencies.db.events import EventsDriver
 from dependencies.models import users
+from dependencies.models import likes
 from dependencies.utils.users import handle_not_exists_email
 from dependencies.token_handler import TokenHandler
 
@@ -19,6 +21,7 @@ db = UsersDriver()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 token_handler = TokenHandler()
 
+event_driver = EventsDriver()
 
 def get_user_info(user_id: str) -> users.UserInfo:
     db_user = db.get_user_by_id(user_id)
@@ -152,3 +155,112 @@ async def get_user_by_id(user_id) -> users.UserInfo:
 async def get_info(token: Annotated[str, Depends(oauth2_scheme)]) -> users.UserInfo:
     user = token_handler.get_user(token)
     return get_user_info(user.id)
+
+
+@router.post(
+    "/events/{event_id}/like",
+    summary="like an event",
+    description="like an event",
+    responses={
+        status.HTTP_200_OK: {
+            "description": "event liked",
+            "content": {
+                "text/plain": {
+                    "example": "event liked"
+                },
+            }
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "event not found",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "event not found"
+                    }
+                }
+            }
+        },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "invalid token",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "invalid toked"
+                    }
+                }
+            }
+        },
+        status.HTTP_400_BAD_REQUEST: {
+            "description": "event is already liked",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "event is already liked"
+                    }
+                }
+            }
+        }
+    }
+)
+async def like_event(event_id:str , token: Annotated[str, Depends(oauth2_scheme)]):
+    user = token_handler.get_user(token)
+    event_driver.get_event_by_id(event_id) 
+    like_db = likes.LikeDB(event_id=event_id, user_id=user.id)
+    if db.is_event_liked(like_db) :
+        raise HTTPException(detail="event is already liked", status_code=status.HTTP_400_BAD_REQUEST) #check if event exists
+    db.like_event(like_db)
+    return PlainTextResponse("event liked", status_code=status.HTTP_200_OK)
+
+@router.delete(
+    "/events/{event_id}/unlike",
+    summary="unlike an event",
+    description="unlike an event",
+    responses={
+        status.HTTP_200_OK: {
+            "description": "event unliked",
+            "content": {
+                "text/plain": {
+                    "example": "event unliked"
+                },
+            }
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "event not found",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "event not found"
+                    }
+                }
+            }
+        },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "invalid token",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "invalid toked"
+                    }
+                }
+            }
+        },
+        status.HTTP_400_BAD_REQUEST: {
+            "description": "event is not liked",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "event is not liked"
+                    }
+                }
+            }
+        }
+    }
+)
+async def unlike_event(event_id:str , token: Annotated[str, Depends(oauth2_scheme)]):
+    user = token_handler.get_user(token)
+    event_driver.get_event_by_id(event_id)
+    like_db = likes.LikeDB(event_id=event_id, user_id=user.id)
+    if not db.is_event_liked(like_db) :
+        raise HTTPException(detail="event is not liked", status_code=status.HTTP_400_BAD_REQUEST)
+    db.unlike_event(like_db)
+    return PlainTextResponse("event unliked", status_code=status.HTTP_200_OK)
