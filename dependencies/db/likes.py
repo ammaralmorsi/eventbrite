@@ -17,3 +17,6 @@ class LikesDriver:
 
     def is_event_liked(self, like: LikeDB):
         return self.collection.find_one(like.dict()) is not None
+
+    def get_liked_events(self, user_id: str) -> list[str]:
+        return [like["event_id"] for like in self.collection.find({"user_id": user_id})]

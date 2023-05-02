@@ -266,6 +266,39 @@ async def unlike_event(event_id:str , token: Annotated[str, Depends(oauth2_schem
     db.unlike_event(like_db)
     return PlainTextResponse("event unliked", status_code=status.HTTP_200_OK)
 
+@router.get(
+    "/me/liked-events",
+    summary="get liked events",
+    description="get liked events",
+    responses={
+        status.HTTP_200_OK: {
+            "description": "liked events",
+            "content": {
+                "application/json": {
+                    "example": [
+                        "nohdsfgsig88",
+                        "rkauf67stdbh",
+                        "knbuwdff76wf"
+                    ]
+                },
+            }
+        },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "invalid token",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "invalid toked"
+                    }
+                }
+            }
+        }
+    }
+)
+async def get_liked_events(token: Annotated[str, Depends(oauth2_scheme)]) -> list[str]:
+    user = token_handler.get_user(token)
+    return db.get_liked_events(user.id)
+
 @router.post(
     "/{user_id}/follow",
     summary="follow a user",
@@ -332,3 +365,36 @@ async def unfollow_user(user_id:str , token: Annotated[str, Depends(oauth2_schem
         raise HTTPException(detail="user is not followed", status_code=status.HTTP_400_BAD_REQUEST)
     db.unfollow_user(follow_db)
     return PlainTextResponse("user unfollowed", status_code=status.HTTP_200_OK)
+
+@router.get(
+    "/me/following",
+    summary="get all followed users",
+    description="get all followed users",
+    responses={
+        status.HTTP_200_OK: {
+            "description": "list of followed users",
+            "content": {
+                "application/json": {
+                    "example": [
+                        "adbkhgyat76ds8sd",
+                        "hikwg8264gvtuwrv"
+                    ]
+                },
+            }
+        },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "invalid token",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "invalid toked"
+                    }
+                }
+            }
+        }
+    }
+)
+async def get_followed_users(token: Annotated[str, Depends(oauth2_scheme)]) -> list[str]:
+    user = token_handler.get_user(token)
+    followed_users = db.get_followed_users(user.id)
+    return followed_users
