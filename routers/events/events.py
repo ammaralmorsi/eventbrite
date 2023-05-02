@@ -122,7 +122,11 @@ async def get_event(
 ) -> event_models.EventOut:
     user = token_handler.get_user(token)
     return db_handler.get_event_by_id(event_id)
-
+#if token not needed
+# async def get_event(
+#         event_id: str
+# ) -> event_models.EventOut:
+#     return db_handler.get_event_by_id(event_id)
 
 @router.delete(
     "/id/{event_id}",
