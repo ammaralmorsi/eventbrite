@@ -9,6 +9,7 @@ from dependencies.db.users import UsersDriver
 from dependencies.db.events import EventsDriver
 from dependencies.models import users
 from dependencies.models import likes
+from dependencies.models import follow
 from dependencies.utils.users import handle_not_exists_email
 from dependencies.token_handler import TokenHandler
 
@@ -264,3 +265,70 @@ async def unlike_event(event_id:str , token: Annotated[str, Depends(oauth2_schem
         raise HTTPException(detail="event is not liked", status_code=status.HTTP_400_BAD_REQUEST)
     db.unlike_event(like_db)
     return PlainTextResponse("event unliked", status_code=status.HTTP_200_OK)
+
+@router.post(
+    "/{user_id}/follow",
+    summary="follow a user",
+    description="follow a user",
+    responses={
+        status.HTTP_200_OK: {
+            "description": "user followed",
+            "content": {
+                "text/plain": {
+                    "example": "user followed"
+                },
+            }
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "user not found",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "user not found"
+                    }
+                }
+            }
+        },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "invalid token",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "invalid toked"
+                    }
+                }
+            }
+        },
+        status.HTTP_400_BAD_REQUEST: {
+            "description": "user is already followed",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "user is already followed"
+                    }
+                }
+            }
+        }
+    }
+)
+async def follow_user(user_id:str , token: Annotated[str, Depends(oauth2_scheme)]):
+    user = token_handler.get_user(token)
+    follow_db = follow.FollowDB(followed_id=user_id, follower_id=user.id)
+    if db.is_user_followed(follow_db):
+        raise HTTPException(detail="user is already followed", status_code=status.HTTP_400_BAD_REQUEST)
+    db.follow_user(follow_db)
+    return PlainTextResponse("user followed", status_code=status.HTTP_200_OK)
+
+@router.delete(
+    "/{user_id}/unfollow",
+    summary="unfollow a user",
+    description="unfollow a user",
+
+)
+async def unfollow_user(user_id:str , token: Annotated[str, Depends(oauth2_scheme)]):
+    user = token_handler.get_user(token)
+    follow_db = follow.FollowDB(followed_id=user_id, follower_id=user.id)
+    if not db.is_user_followed(follow_db):
+        raise HTTPException(detail="user is not followed", status_code=status.HTTP_400_BAD_REQUEST)
+    db.unfollow_user(follow_db)
+    return PlainTextResponse("user unfollowed", status_code=status.HTTP_200_OK)
