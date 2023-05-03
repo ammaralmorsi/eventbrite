@@ -1,4 +1,3 @@
-from enum import Enum
 from typing import Annotated
 from datetime import datetime
 
@@ -54,19 +53,14 @@ class DateAndTime(BaseModel):
     )]
 
 
-class LocationTypeEnum(str, Enum):
-    venue = "venue"
-    online = "online"
-
-
 class Location(BaseModel):
-    type: Annotated[LocationTypeEnum, Field(
+    is_online: Annotated[bool, Field(
         description="Type of the location (venue or online)",
-        example="venue",
-    )]
-    location: Annotated[str | None, Field(
-        description="Location string (required if type is venue)",
-        example="123 Main St, San Francisco, CA 94111",
+        example="false",
+    )] = False
+    city: Annotated[str | None, Field(
+        description="city as a string (required if type is venue)",
+        example="San Francisco",
     )] = None
 
 

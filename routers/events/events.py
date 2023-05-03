@@ -1,4 +1,5 @@
-from typing import Annotated
+from datetime import datetime
+from typing import Annotated, Optional
 
 from fastapi import status
 from fastapi import Depends
@@ -178,3 +179,25 @@ async def delete_event(
     likes_driver.delete_likes_by_event_id(event_id)
     event_driver.delete_event_by_id(event_id)
     return PlainTextResponse("Event deleted successfully", status_code=200)
+
+
+@router.get(
+    "/search",
+    summary="Search for events",
+)
+async def search_events(
+        city: str,
+        online: Optional[bool] = None,
+        title: Optional[str] = None,
+        start_date: Optional[datetime] = None,
+        end_date: Optional[datetime] = None,
+        category: Optional[str] = None,
+) -> list[event_models.EventOut]:
+    return event_driver.search_events(
+        city,
+        online,
+        title,
+        start_date,
+        end_date,
+        category,
+    )

@@ -1,3 +1,7 @@
+import datetime
+import re
+from typing import Optional
+
 from fastapi import status
 from fastapi import HTTPException
 
@@ -40,5 +44,52 @@ class EventDriver:
         self.handle_nonexistent_event(event_id)
         try:
             self.collection.delete_one({"_id": convert_to_object_id(event_id)})
+        except mongo_errors.PyMongoError:
+            raise HTTPException(detail="database error", status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def search_events(
+            self,
+            city: str,
+            online: Optional[bool] = None,
+            title: Optional[str] = None,
+            start_date: Optional[str] = None,
+            end_date: Optional[str] = None,
+            category: Optional[str] = None,
+    ) -> list[models.EventOut]:
+        def get_pattern(str_in: str):
+            return re.compile(".*{}.*".format(re.escape(str_in)), re.IGNORECASE)
+
+        try:
+            city_pattern = get_pattern(city)
+            query = {
+                "state.is_public": True,
+                "location.city": {"$regex": city_pattern},
+            }
+
+            if online is not None:
+                query["location.is_online"] = online
+
+            if title is not None:
+                title_pattern = get_pattern(title)
+                query["basic_info.title"] = {"$regex": title_pattern}
+
+            if start_date is not None:
+                inner_start_date = start_date
+            else:
+                inner_start_date = datetime.datetime(1970, 1, 1, 0, 0, 0, 0)
+
+            if end_date is not None:
+                inner_end_date = end_date
+            else:
+                inner_end_date = datetime.datetime(3000, 1, 1, 0, 0, 0, 0)
+
+            query["date_and_time.start_date_time"] = {"$gte": inner_start_date, "$lte": inner_end_date}
+
+            if category is not None:
+                category_pattern = get_pattern(category)
+                query["basic_info.category"] = {"$regex": category_pattern}
+
+            events = self.collection.find(query)
+            return [models.EventOut(id=str(event["_id"]), **event) for event in events]
         except mongo_errors.PyMongoError:
             raise HTTPException(detail="database error", status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
