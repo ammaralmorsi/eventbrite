@@ -23,7 +23,7 @@ class PromoCode(BaseModel):
         gt=-1,
         description="Current amount of the promocode",
         example=100,
-    )]
+    )] = None
     discount_percentage: Annotated[float, Field(
         gt=0,
         lt=1,

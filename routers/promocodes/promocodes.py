@@ -45,14 +45,21 @@ def check_amount(promocode_id, amount):
     responses={
         200: {"description": "Promocodes created successfully"},
         404: {"description": "Event ID is invalid"},
+        500: {"description": "Promocodes creation failed"},
     },
 )
 async def create_promocodes_by_event_id(event_id: str, promocodes: List[PromoCode]):
     if not db_handler.is_valid_event_id(event_id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event ID is invalid")
 
-    db_handler.create_promocodes(event_id, promocodes)
-    return PlainTextResponse("Promocodes created successfully", status_code=200)
+    for code in promocodes:
+        if code.current_amount > code.limited_amount:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                                detail=f"Current amount can't be more than limited amount for {code.name}")
+    if db_handler.create_promocodes(event_id, promocodes):
+        return PlainTextResponse("Promocodes created successfully", status_code=200)
+    else:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Promocodes creation failed")
 
 
 @router.put(
