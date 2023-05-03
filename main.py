@@ -8,6 +8,9 @@ from routers.events import events
 from routers.users import users
 
 
+
+
+
 app = FastAPI(
     title="EventBrite",
     description="EventBrite API",
