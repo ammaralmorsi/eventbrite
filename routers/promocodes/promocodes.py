@@ -106,6 +106,7 @@ async def update_promocode_amount_by_id(promocode_id: str, amount: int):
     else:
         return PlainTextResponse("Promocode amount update failed", status_code=500)
 
+
 @router.get(
     "/event_id/{event_id}",
     summary="Get promocodes by event id",
@@ -138,20 +139,20 @@ async def get_promocode_by_id(promocode_id: str):
     return db_handler.get_promocode_by_id(promocode_id)
 
 
-@router.get(
-    "/{event_id}/{name}",
-    summary="Get promocode by name",
-    description="This endpoint allows you to get promocode by name.",
-    tags=["promocodes"],
-    responses={
-        200: {"description": "Promocode retrieved successfully"},
-    },
-)
-async def get_promocode_by_event_id_and_name(event_id: str, name: str):
-    if not db_handler.is_valid_event_id(event_id):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event ID not found")
-
-    return db_handler.get_promocode_by_name(event_id, name)
+# @router.get(
+#     "/{event_id}/{name}",
+#     summary="Get promocode by name",
+#     description="This endpoint allows you to get promocode by name.",
+#     tags=["promocodes"],
+#     responses={
+#         200: {"description": "Promocode retrieved successfully"},
+#     },
+# )
+# async def get_promocode_by_event_id_and_name(event_id: str, name: str):
+#     if not db_handler.is_valid_event_id(event_id):
+#         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event ID not found")
+#
+#     return db_handler.get_promocode_by_name(event_id, name)
 
 
 @router.delete(
@@ -187,19 +188,19 @@ async def delete_promocode_by_id(promocode_id: str):
     db_handler.delete_promocode_by_id(promocode_id)
     return PlainTextResponse("Promocode deleted successfully", status_code=200)
 
-
-@router.delete(
-    "/{event_id}/{name}",
-    summary="Delete promocode by name",
-    description="This endpoint allows you to delete promocode by name.",
-    tags=["promocodes"],
-    responses={
-        200: {"description": "Promocode deleted successfully"},
-    },
-)
-async def delete_promocode_by_event_id_and_name(event_id: str, name: str):
-    if not db_handler.is_valid_event_id(event_id):
-        return PlainTextResponse("Event ID is invalid", status_code=404)
-
-    db_handler.delete_promocode_by_name(event_id, name)
-    return PlainTextResponse("Promocode deleted successfully", status_code=200)
+#
+# @router.delete(
+#     "/{event_id}/{name}",
+#     summary="Delete promocode by name",
+#     description="This endpoint allows you to delete promocode by name.",
+#     tags=["promocodes"],
+#     responses={
+#         200: {"description": "Promocode deleted successfully"},
+#     },
+# )
+# async def delete_promocode_by_event_id_and_name(event_id: str, name: str):
+#     if not db_handler.is_valid_event_id(event_id):
+#         return PlainTextResponse("Event ID is invalid", status_code=404)
+#
+#     db_handler.delete_promocode_by_name(event_id, name)
+#     return PlainTextResponse("Promocode deleted successfully", status_code=200)
