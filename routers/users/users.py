@@ -277,9 +277,20 @@ async def unlike_event(event_id: str, token: Annotated[str, Depends(oauth2_schem
             "content": {
                 "application/json": {
                     "example": [
-                        "nohdsfgsig88",
-                        "rkauf67stdbh",
-                        "knbuwdff76wf"
+                        {
+                            "id": "event_id",
+                            "title": "event title",
+                            "start_date_time": "2021-10-10T10:10:10",
+                            "image_link": "https://www.gravatar.com/avatar/205e460b479e2e5b48aec07710c08d50?s=200",
+                            "is_online": True
+                        },
+                        {
+                            "id": "event_id",
+                            "title": "event title",
+                            "start_date_time": "2021-10-10T10:10:10",
+                            "image_link": "https://www.gravatar.com/avatar/205e460b479e2e5b48aec07710c08d50?s=200",
+                            "is_online": False
+                        }
                     ]
                 },
             }
