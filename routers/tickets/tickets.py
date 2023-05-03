@@ -123,6 +123,8 @@ async def update_ticket_by_ticket_id(
     responses={
         200: {"description": "Tickets updated successfully"},
         404: {"description": "Ticket not found"},
+        400: {"description": "Not enough tickets available"},
+        400: {"description": "Too many tickets"},
     },
 )
 async def update_ticket_by_available_quantity(ticket_id: str, quantity: int):

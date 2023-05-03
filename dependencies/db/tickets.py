@@ -26,6 +26,13 @@ class TicketDriver:
             res.append(TicketOut(id=str(ticket["_id"]), **ticket))
         return res
 
+    def is_free_event(self, event_id):
+        tickets = self.collection.find({"event_id": event_id})
+        for ticket in tickets:
+            if ticket["price"] == 0:
+                return True
+        return False
+
     def is_valid_event_id(self, event_id):
         return self.db["events"].count_documents({"_id": convert_to_object_id(event_id)}) > 0
 
