@@ -85,3 +85,15 @@ class UsersDriver:
             return self.collection.find_one({"_id": convert_to_object_id(user_id)})["last_password_update"]
         except mongo_errors.PyMongoError:
             raise HTTPException(detail="database error", status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def edit_info(self, user_id, firstname, lastname, avatar):
+        try:
+            print(convert_to_object_id(user_id))
+            if firstname is not None:
+                self.collection.update_one({"_id": convert_to_object_id(user_id)}, {"$set": {"firstname": firstname}})
+            if lastname is not None:
+                self.collection.update_one({"_id": convert_to_object_id(user_id)}, {"$set": {"lastname": lastname}})
+            if avatar is not None:
+                self.collection.update_one({"_id": convert_to_object_id(user_id)}, {"$set": {"avatar_url": avatar}})
+        except mongo_errors.PyMongoError:
+            raise HTTPException(detail="database error", status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)

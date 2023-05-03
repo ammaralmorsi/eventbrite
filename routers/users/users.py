@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends
 from fastapi import status
@@ -502,3 +502,50 @@ async def get_followed_users(token: Annotated[str, Depends(oauth2_scheme)]) -> l
     users_driver.handle_nonexistent_user(user.id)
 
     return follows_driver.get_followed_users(user.id)
+
+
+@router.put(
+    "/me/edit",
+    summary="edit user firstname, lastname, avatar",
+    description="edit user information",
+    response_class=PlainTextResponse,
+    responses={
+        status.HTTP_200_OK: {
+            "description": "list of followed users",
+            "content": {
+                "text/plain": {
+                    "example": "User information updated successfully"
+                },
+            }
+        },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "invalid token",
+            "content": {
+                "text/plain": {
+                    "example": {
+                        "detail": "invalid token"
+                    }
+                }
+            }
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "user not found",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "user not found"
+                    }
+                }
+            }
+        }
+    })
+async def edit_info(
+        token: Annotated[str, Depends(oauth2_scheme)],
+        firstname: Optional[str] = None,
+        lastname: Optional[str] = None,
+        avatar_url: Optional[str] = None,
+) -> PlainTextResponse:
+    user = token_handler.get_user(token)
+    users_driver.handle_nonexistent_user(user.id)
+    users_driver.edit_info(user.id, firstname, lastname, avatar_url)
+    return PlainTextResponse("User information updated successfully", status_code=status.HTTP_200_OK)
