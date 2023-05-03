@@ -44,6 +44,7 @@ def check_amount(promocode_id, amount):
     tags=["promocodes"],
     responses={
         200: {"description": "Promocodes created successfully"},
+        404: {"description": "Event ID is invalid"},
     },
 )
 async def create_promocodes_by_event_id(event_id: str, promocodes: List[PromoCode]):
@@ -61,6 +62,8 @@ async def create_promocodes_by_event_id(event_id: str, promocodes: List[PromoCod
     tags=["promocodes"],
     responses={
         200: {"description": "Promocode updated successfully"},
+        404: {"description": "Promocode ID is invalid"},
+        500: {"description": "Promocode update failed"},
     },
 )
 async def update_promocode_by_id(promocode_id: str,
@@ -91,6 +94,8 @@ async def update_promocode_by_id(promocode_id: str,
     tags=["promocodes"],
     responses={
         200: {"description": "Promocode amount updated successfully"},
+        404: {"description": "Promocode ID is invalid"},
+        500: {"description": "Promocode amount update failed"},
     },
 )
 async def update_promocode_amount_by_id(promocode_id: str, amount: int):
@@ -114,6 +119,7 @@ async def update_promocode_amount_by_id(promocode_id: str, amount: int):
     tags=["promocodes"],
     responses={
         200: {"description": "Promocodes retrieved successfully"},
+        404: {"description": "Event ID not found"},
     },
 )
 async def get_promocodes_by_event_id(event_id: str) -> List[PromoCode]:
@@ -130,6 +136,7 @@ async def get_promocodes_by_event_id(event_id: str) -> List[PromoCode]:
     tags=["promocodes"],
     responses={
         200: {"description": "Promocode retrieved successfully"},
+        404: {"description": "Promocode ID not found"},
     },
 )
 async def get_promocode_by_id(promocode_id: str):
@@ -146,6 +153,7 @@ async def get_promocode_by_id(promocode_id: str):
     tags=["promocodes"],
     responses={
         200: {"description": "Promocodes deleted successfully"},
+        404: {"description": "Event ID is invalid"},
     },
 )
 async def delete_promocodes_by_event_id(event_id: str):
@@ -163,6 +171,7 @@ async def delete_promocodes_by_event_id(event_id: str):
     tags=["promocodes"],
     responses={
         200: {"description": "Promocode deleted successfully"},
+        404: {"description": "Promocode ID is invalid"},
     },
 )
 async def delete_promocode_by_id(promocode_id: str):
