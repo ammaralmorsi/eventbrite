@@ -38,14 +38,18 @@ def check_quantity(ticket_id, quantity):
     tags=["tickets"],
     responses={
         200: {"description": "Tickets created successfully"},
+        404: {"description": "Event not found"},
+        400: {"description": "Error creating tickets"},
     },
 )
 async def create_tickets_by_event_id(event_id: str, tickets: List[TicketIn]):
     if not db_handler.is_valid_event_id(event_id):
-        return PlainTextResponse("Event ID not found", status_code=404)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
 
-    db_handler.create_tickets(event_id, tickets)
-    return PlainTextResponse("Tickets created successfully", status_code=200)
+    if db_handler.create_tickets(event_id, tickets):
+        return PlainTextResponse("Tickets created successfully", status_code=200)
+    else:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error creating tickets")
 
 
 @router.get(
@@ -55,11 +59,12 @@ async def create_tickets_by_event_id(event_id: str, tickets: List[TicketIn]):
     tags=["tickets"],
     responses={
         200: {"description": "Tickets retrieved successfully"},
+        404: {"description": "Event not found"},
     },
 )
 async def get_tickets_by_event_id(event_id: str) -> List[TicketOut]:
     if db_handler.is_valid_event_id(event_id) == 0:
-        return []
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
 
     return db_handler.get_tickets(event_id)
 
@@ -71,6 +76,7 @@ async def get_tickets_by_event_id(event_id: str) -> List[TicketOut]:
     tags=["tickets"],
     responses={
         200: {"description": "Tickets retrieved successfully"},
+        404: {"description": "Ticket not found"},
     },
 )
 async def get_tickets_by_ticket_id(ticket_id: str) -> TicketOut:
@@ -86,6 +92,7 @@ async def get_tickets_by_ticket_id(ticket_id: str) -> TicketOut:
     tags=["tickets"],
     responses={
         200: {"description": "Ticket updated successfully"},
+        404: {"description": "Ticket not found"},
     },
 )
 async def update_ticket_by_ticket_id(
@@ -102,8 +109,10 @@ async def update_ticket_by_ticket_id(
     if db_handler.is_valid_ticket_id(ticket_id) == 0:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ticket not found")
 
-    db_handler.update_ticket(ticket_id, updated_attributes)
-    return PlainTextResponse("Ticket updated successfully", status_code=200)
+    if db_handler.update_ticket(ticket_id, updated_attributes):
+        return PlainTextResponse("Ticket updated successfully", status_code=200)
+    else:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ticket not found")
 
 
 @router.put(
@@ -113,16 +122,19 @@ async def update_ticket_by_ticket_id(
     tags=["tickets"],
     responses={
         200: {"description": "Tickets updated successfully"},
+        404: {"description": "Ticket not found"},
     },
 )
 async def update_ticket_by_available_quantity(ticket_id: str, quantity: int):
     if db_handler.is_valid_ticket_id(ticket_id) == 0:
-        return PlainTextResponse("Event not found", status_code=404)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ticket not found")
 
     check_quantity(ticket_id, quantity)
 
-    db_handler.update_quantity(ticket_id, quantity)
-    return PlainTextResponse("Tickets updated successfully", status_code=200)
+    if db_handler.update_quantity(ticket_id, quantity):
+        return PlainTextResponse("Tickets updated successfully", status_code=200)
+    else:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ticket not found")
 
 
 @router.delete(
@@ -132,14 +144,17 @@ async def update_ticket_by_available_quantity(ticket_id: str, quantity: int):
     tags=["tickets"],
     responses={
         200: {"description": "Tickets deleted successfully"},
+        404: {"description": "Event not found"},
     },
 )
 async def delete_tickets_by_event_id(event_id: str):
     if db_handler.is_valid_event_id(event_id) == 0:
-        return PlainTextResponse("Event not found", status_code=404)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
 
-    db_handler.delete_tickets_by_event_id(event_id)
-    return PlainTextResponse("Tickets deleted successfully", status_code=200)
+    if db_handler.delete_tickets_by_event_id(event_id):
+        return PlainTextResponse("Tickets deleted successfully", status_code=200)
+    else:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
 
 
 @router.delete(
@@ -149,11 +164,14 @@ async def delete_tickets_by_event_id(event_id: str):
     tags=["tickets"],
     responses={
         200: {"description": "Tickets deleted successfully"},
+        404: {"description": "Ticket not found"},
     },
 )
 async def delete_tickets_by_ticket_id(ticket_id: str):
     if db_handler.is_valid_ticket_id(ticket_id) == 0:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ticket not found")
 
-    db_handler.delete_ticket_by_ticket_id(ticket_id)
-    return PlainTextResponse("Tickets deleted successfully", status_code=status.HTTP_200_OK)
+    if db_handler.delete_ticket_by_ticket_id(ticket_id):
+        return PlainTextResponse("Tickets deleted successfully", status_code=status.HTTP_200_OK)
+    else:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ticket not found")

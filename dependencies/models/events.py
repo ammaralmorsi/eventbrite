@@ -4,7 +4,7 @@ from datetime import datetime
 from pydantic import BaseModel
 from pydantic import Field
 
-from dependencies.models.tickets import Ticket
+from dependencies.models.tickets import TicketIn, TicketOut
 
 
 class BasicInfo(BaseModel):
@@ -101,7 +101,7 @@ date_and_time_type = Annotated[DateAndTime, Field(
 location_type = Annotated[Location, Field(
     description="Location details of the event",
 )]
-tickets_type = Annotated[list[Ticket], Field(
+tickets_type = Annotated[list[TicketIn], Field(
     description="Tickets of the event",
 )]
 id_type = Annotated[str, Field(

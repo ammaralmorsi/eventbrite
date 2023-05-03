@@ -1,5 +1,6 @@
 from dependencies.models.tickets import TicketDB, TicketIn, TicketOut
 from dependencies.db.client import Client
+from bson.objectid import ObjectId
 from dependencies.utils.bson import convert_to_object_id
 
 
@@ -24,6 +25,9 @@ class TicketDriver:
         for ticket in self.collection.find({"event_id": event_id}):
             res.append(TicketOut(id=str(ticket["_id"]), **ticket))
         return res
+
+    def is_valid_event_id(self, event_id):
+        return self.db["events"].count_documents({"_id": convert_to_object_id(event_id)}) > 0
 
     def is_valid_ticket_id(self, ticket_id):
         return self.collection.count_documents({"_id": ObjectId(ticket_id)}) > 0
