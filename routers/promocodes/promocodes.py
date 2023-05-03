@@ -49,7 +49,7 @@ def check_amount(promocode_id, amount):
 )
 async def create_promocodes_by_event_id(event_id: str, promocodes: List[PromoCode]):
     if not db_handler.is_valid_event_id(event_id):
-        return PlainTextResponse("Event ID is invalid", status_code=404)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event ID is invalid")
 
     db_handler.create_promocodes(event_id, promocodes)
     return PlainTextResponse("Promocodes created successfully", status_code=200)
@@ -79,12 +79,12 @@ async def update_promocode_by_id(promocode_id: str,
                                      }
                                  )]):
     if not db_handler.is_valid_promocode_id(promocode_id):
-        return PlainTextResponse("Promocode ID is invalid", status_code=404)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Promocode ID is invalid")
 
     if db_handler.update_promocode(promocode_id, updated_promocode):
         return PlainTextResponse("Promocode updated successfully", status_code=200)
     else:
-        return PlainTextResponse("Promocode update failed", status_code=500)
+        raise HTTPException(status_code=500, detail="Promocode update failed")
 
 
 @router.put(
@@ -94,13 +94,15 @@ async def update_promocode_by_id(promocode_id: str,
     tags=["promocodes"],
     responses={
         200: {"description": "Promocode amount updated successfully"},
+        400: {"description": "Not enough promocodes available"},
+        400: {"description": "Too many Promocodes"},
         404: {"description": "Promocode ID is invalid"},
-        500: {"description": "Promocode amount update failed"},
+        408: {"description": "Promocode amount update failed"},
     },
 )
 async def update_promocode_amount_by_id(promocode_id: str, amount: int):
     if not db_handler.is_valid_promocode_id(promocode_id):
-        return PlainTextResponse("Promocode ID is invalid", status_code=404)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Promocode ID is invalid")
 
     if unlimited(promocode_id):
         return PlainTextResponse("Promocode is unlimited", status_code=200)
@@ -109,7 +111,7 @@ async def update_promocode_amount_by_id(promocode_id: str, amount: int):
     if db_handler.update_promocode_amount(promocode_id, amount):
         return PlainTextResponse("Promocode amount updated successfully", status_code=200)
     else:
-        return PlainTextResponse("Promocode amount update failed", status_code=500)
+        raise HTTPException(status_code=status.HTTP_408_REQUEST_TIMEOUT, detail="Promocode amount update failed")
 
 
 @router.get(
@@ -124,7 +126,7 @@ async def update_promocode_amount_by_id(promocode_id: str, amount: int):
 )
 async def get_promocodes_by_event_id(event_id: str) -> List[PromoCode]:
     if not db_handler.is_valid_event_id(event_id):
-        raise HTTPException(status_code=404, detail="Event ID not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event ID not found")
 
     return db_handler.get_promocodes(event_id)
 
@@ -158,7 +160,7 @@ async def get_promocode_by_id(promocode_id: str):
 )
 async def delete_promocodes_by_event_id(event_id: str):
     if not db_handler.is_valid_event_id(event_id):
-        return PlainTextResponse("Event ID is invalid", status_code=404)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event ID is invalid")
 
     db_handler.delete_promocodes(event_id)
     return PlainTextResponse("Promocodes deleted successfully", status_code=200)
@@ -176,7 +178,7 @@ async def delete_promocodes_by_event_id(event_id: str):
 )
 async def delete_promocode_by_id(promocode_id: str):
     if not db_handler.is_valid_promocode_id(promocode_id):
-        return PlainTextResponse("Promocode ID is invalid", status_code=404)
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Promocode ID is invalid")
 
     db_handler.delete_promocode_by_id(promocode_id)
     return PlainTextResponse("Promocode deleted successfully", status_code=200)
