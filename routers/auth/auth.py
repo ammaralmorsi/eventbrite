@@ -9,7 +9,6 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from dependencies.models import users
 from dependencies.db.users import UsersDriver
-from dependencies.utils.users import handle_exists_email, handle_not_exists_email
 from .password_handler import PasswordHandler
 from dependencies.token_handler import TokenHandler
 from .email_handler import EmailHandler
@@ -23,7 +22,7 @@ router = APIRouter(
 password_handler = PasswordHandler()
 token_handler = TokenHandler()
 email_handler = EmailHandler()
-db = UsersDriver()
+users_driver = UsersDriver()
 oath2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 
@@ -54,10 +53,10 @@ oath2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
     }
 )
 async def signup(user: users.UserInSignup) -> PlainTextResponse:
-    handle_exists_email(user.email)
+    users_driver.handle_existing_email(user.email)
 
     user.password = password_handler.get_password_hash(user.password)
-    inserted_user: users.UserOut = db.create_user(user)
+    inserted_user: users.UserOut = users_driver.create_user(user)
 
     token = token_handler.encode_token(users.UserToken(**inserted_user.dict()), 0.5)
     email_handler.send_email(user.email, token, EmailType.SIGNUP_VERIFICATION)
@@ -111,12 +110,12 @@ async def signup(user: users.UserInSignup) -> PlainTextResponse:
         }
     }
 )
-async def verify_email(token: Annotated[str, Depends(oath2_scheme)]):
+async def verify_email(token: Annotated[str, Depends(oath2_scheme)]) -> PlainTextResponse:
     user = token_handler.get_user(token)
 
-    handle_not_exists_email(user.email)
+    users_driver.handle_nonexistent_email(user.email)
 
-    if not db.set_is_verified(user.email):
+    if not users_driver.set_is_verified(user.email):
         raise HTTPException(detail="can't verify email", status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     return PlainTextResponse("email verified successfully", status_code=status.HTTP_200_OK)
@@ -133,7 +132,8 @@ async def verify_email(token: Annotated[str, Depends(oath2_scheme)]):
             "content": {
                 "application/json": {
                     "example": {
-                        "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFkbWluQGV4YW1wbGUuY29tIiwiaWF0IjoxNjIyNjQyNjQyLCJleHAiOjE",
+                        "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
+                                        "eyJlbWFpbCI6ImFkbWluQGV4YW1wbGUuY29tIiwiaWF0IjoxNjIyNjQyNjQyLCJleHAiOjE",
                         "token_type": "bearer"
                     }
                 }
@@ -164,8 +164,8 @@ async def verify_email(token: Annotated[str, Depends(oath2_scheme)]):
 async def login(user_in: Annotated[OAuth2PasswordRequestForm, Depends()]) -> users.UserOutLogin:
     user_in = users.UserInLogin(email=user_in.username, password=user_in.password)
 
-    handle_not_exists_email(user_in.email)
-    user_db: users.UserOut = db.get_user_by_email(user_in.email)
+    users_driver.handle_nonexistent_email(user_in.email)
+    user_db: users.UserOut = users_driver.get_user_by_email(user_in.email)
 
     if not password_handler.verify_password(user_in.password, user_db.password):
         raise HTTPException(detail="wrong password", status_code=status.HTTP_401_UNAUTHORIZED)
@@ -206,9 +206,9 @@ async def login(user_in: Annotated[OAuth2PasswordRequestForm, Depends()]) -> use
 
 )
 async def forgot_password(email):
-    handle_not_exists_email(email)
+    users_driver.handle_nonexistent_email(email)
 
-    user_out: users.UserOut = db.get_user_by_email(email)
+    user_out: users.UserOut = users_driver.get_user_by_email(email)
     encoded_token = token_handler.encode_token(users.UserToken(**user_out.dict()), 0.5)
     email_handler.send_email(email, encoded_token, EmailType.FORGET_PASSWORD)
     return PlainTextResponse("sent a verification email", status_code=status.HTTP_200_OK)
@@ -244,10 +244,10 @@ async def forgot_password(email):
 async def change_password(token: Annotated[str, Depends(oath2_scheme)], request: users.UserInForgotPassword):
     user = token_handler.get_user(token)
 
-    handle_not_exists_email(user.email)
+    users_driver.handle_nonexistent_email(user.email)
     new_password = password_handler.get_password_hash(request.new_password)
 
-    db.update_password(user.email, new_password)
+    users_driver.update_password(user.email, new_password)
     return PlainTextResponse("password updated successfully", status_code=status.HTTP_200_OK)
 
 
@@ -280,11 +280,11 @@ async def change_password(token: Annotated[str, Depends(oath2_scheme)], request:
 async def update_password(token: Annotated[str, Depends(oath2_scheme)], request: users.UserInUpdatePassword):
     user = token_handler.get_user(token)
 
-    handle_not_exists_email(user.email)
-    db_user: users.UserOut = db.get_user_by_email(user.email)
+    users_driver.handle_nonexistent_email(user.email)
+    db_user: users.UserOut = users_driver.get_user_by_email(user.email)
 
     if not password_handler.verify_password(request.old_password, db_user.password):
         raise HTTPException(detail="password is incorrect", status_code=status.HTTP_401_UNAUTHORIZED)
     new_password_hashed = password_handler.get_password_hash(request.new_password)
-    db.update_password(user.email, new_password_hashed)
+    users_driver.update_password(user.email, new_password_hashed)
     return PlainTextResponse("password updated successfully", status_code=status.HTTP_200_OK)

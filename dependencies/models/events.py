@@ -129,7 +129,7 @@ class CreateEventIn(BaseModel):
     date_and_time: date_and_time_type
     location: location_type
     tickets: tickets_type
-    city: city_type
+
 
 class EventDB(BaseModel):
     creator_id: id_type
@@ -140,7 +140,7 @@ class EventDB(BaseModel):
     state: state_type
     date_and_time: date_and_time_type
     location: location_type
-    city: city_type
+
 
 class EventOut(EventDB):
     id: id_type
