@@ -180,4 +180,3 @@ async def delete_promocode_by_id(promocode_id: str):
 
     db_handler.delete_promocode_by_id(promocode_id)
     return PlainTextResponse("Promocode deleted successfully", status_code=200)
-
