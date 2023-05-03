@@ -8,6 +8,8 @@ from fastapi.responses import PlainTextResponse
 from fastapi.security import OAuth2PasswordBearer
 
 from dependencies.db.events import EventDriver
+from dependencies.db.likes import LikesDriver
+from dependencies.db.users import UsersDriver
 import dependencies.models.users as user_models
 import dependencies.models.events as event_models
 from dependencies.token_handler import TokenHandler
@@ -17,7 +19,9 @@ router = APIRouter(
     tags=["events"],
 )
 
-db_handler = EventDriver()
+event_driver = EventDriver()
+users_driver = UsersDriver()
+likes_driver = LikesDriver()
 token_handler = TokenHandler()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
@@ -65,7 +69,10 @@ async def create_event(
         event_in: event_models.CreateEventIn
 ) -> event_models.EventOut:
     user: user_models.UserToken = token_handler.get_user(token)
-    return db_handler.create_new_event(event_models.EventDB(**event_in.dict(), creator_id=user.id))
+
+    users_driver.handle_nonexistent_user(user.id)
+
+    return event_driver.create_new_event(event_models.EventDB(**event_in.dict(), creator_id=user.id))
 
 
 @router.get(
@@ -117,11 +124,9 @@ async def create_event(
     }
 )
 async def get_event(
-        token: Annotated[str, Depends(oauth2_scheme)],
         event_id: str
 ) -> event_models.EventOut:
-    user = token_handler.get_user(token)
-    return db_handler.get_event_by_id(event_id)
+    return event_driver.get_event_by_id(event_id)
 
 
 @router.delete(
@@ -163,10 +168,13 @@ async def delete_event(
         event_id: str
 ) -> PlainTextResponse:
     user = token_handler.get_user(token)
-    event: event_models.EventOut = db_handler.get_event_by_id(event_id)
 
+    users_driver.handle_nonexistent_user(user.id)
+
+    event: event_models.EventOut = event_driver.get_event_by_id(event_id)
     if event.creator_id != user.id:
         raise HTTPException(detail="user is not the creator", status_code=status.HTTP_401_UNAUTHORIZED)
 
-    db_handler.delete_event_by_id(event_id)
+    likes_driver.delete_likes_by_event_id(event_id)
+    event_driver.delete_event_by_id(event_id)
     return PlainTextResponse("Event deleted successfully", status_code=200)
