@@ -3,7 +3,7 @@ from typing import List, Annotated
 from fastapi import APIRouter, HTTPException, status, Body
 from dependencies.models.orders import Order, OrderOut
 from dependencies.db.users import UsersDriver
-from dependencies.db.tickets import OrderDriver
+from dependencies.db.orders import OrderDriver
 from dependencies.db.events import EventDriver
 
 router = APIRouter(
