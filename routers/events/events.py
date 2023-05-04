@@ -24,7 +24,6 @@ event_driver = EventDriver()
 users_driver = UsersDriver()
 likes_driver = LikesDriver()
 token_handler = TokenHandler()
-promocodes_driver = PromocodeDriver()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 
