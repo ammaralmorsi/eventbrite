@@ -11,7 +11,6 @@ from fastapi.security import OAuth2PasswordBearer
 from dependencies.db.events import EventDriver
 from dependencies.db.likes import LikesDriver
 from dependencies.db.users import UsersDriver
-from dependencies.db.promocodes import PromocodeDriver
 import dependencies.models.users as user_models
 import dependencies.models.events as event_models
 from dependencies.token_handler import TokenHandler
