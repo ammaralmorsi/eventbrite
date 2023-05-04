@@ -17,9 +17,6 @@ class TicketDriver:
         ]
         return self.collection.insert_many(tickets)
 
-    def create_ticket(self, event_id: str, ticket: TicketIn):
-        pass
-
     def get_tickets(self, event_id) -> list[TicketOut]:
         res = []
         for ticket in self.collection.find({"event_id": event_id}):

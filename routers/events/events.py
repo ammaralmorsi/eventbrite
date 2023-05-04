@@ -15,6 +15,7 @@ import dependencies.models.users as user_models
 import dependencies.models.events as event_models
 from dependencies.token_handler import TokenHandler
 
+
 router = APIRouter(
     prefix="/events",
     tags=["events"],
@@ -72,7 +73,6 @@ async def create_event(
     user: user_models.UserToken = token_handler.get_user(token)
 
     users_driver.handle_nonexistent_user(user.id)
-
     return event_driver.create_new_event(event_models.EventDB(**event_in.dict(), creator_id=user.id))
 
 

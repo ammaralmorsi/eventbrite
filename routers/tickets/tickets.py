@@ -32,7 +32,7 @@ def check_quantity(ticket_id, quantity):
 
 
 @router.post(
-    "/{event_id}",
+    "/event_id/{event_id}",
     summary="Create tickets by event id",
     description="This endpoint allows you to create tickets by event id.",
     tags=["tickets"],
@@ -116,7 +116,7 @@ async def update_ticket_by_ticket_id(
 
 
 @router.put(
-    "/{ticket_id}/{quantity}",
+    "/ticket_id/{ticket_id}/quantity/{quantity}",
     summary="Update number of tickets in the given event id",
     description="This endpoint allows you to update number of tickets in the given event id.",
     tags=["tickets"],
@@ -140,7 +140,7 @@ async def update_ticket_by_available_quantity(ticket_id: str, quantity: int):
 
 
 @router.delete(
-    "event_id/{event_id}",
+    "/event_id/{event_id}",
     summary="Delete tickets by event id",
     description="This endpoint allows you to delete tickets by event id.",
     tags=["tickets"],
