@@ -14,7 +14,6 @@ from dependencies.db.users import UsersDriver
 import dependencies.models.users as user_models
 import dependencies.models.events as event_models
 from dependencies.token_handler import TokenHandler
-from dependencies.db.tickets import TicketDriver
 
 
 router = APIRouter(
@@ -27,7 +26,6 @@ users_driver = UsersDriver()
 likes_driver = LikesDriver()
 token_handler = TokenHandler()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
-tickets_driver = TicketDriver()
 
 
 @router.post(
