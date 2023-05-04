@@ -30,9 +30,6 @@ class PromocodeDriver:
     def get_promocode_by_id(self, promocode_id: str) -> PromocodeDB:
         return PromocodeDB(**self.collection.find_one({"_id": ObjectId(promocode_id)}))
 
-    def get_promocode_by_name(self, event_id, promocode_name: str) -> PromoCode:
-        return PromocodeDB(**self.collection.find_one({"name": promocode_name}))
-
     def create_promocodes(self, event_id,promocodes: list[PromoCode]):
         promocodes = [
             PromocodeDB(
@@ -46,6 +43,3 @@ class PromocodeDriver:
 
     def delete_promocode_by_id(self, promocode_id: str):
         return self.collection.delete_one({"_id": ObjectId(promocode_id)})
-
-    def delete_promocode_by_name(self, event_id, promocode_name: str):
-        return self.collection.delete_one({"event_id": event_id, "name": promocode_name})

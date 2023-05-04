@@ -11,6 +11,7 @@ from fastapi.security import OAuth2PasswordBearer
 from dependencies.db.events import EventDriver
 from dependencies.db.likes import LikesDriver
 from dependencies.db.users import UsersDriver
+from dependencies.db.promocodes import PromocodeDriver
 import dependencies.models.users as user_models
 import dependencies.models.events as event_models
 from dependencies.token_handler import TokenHandler
@@ -24,6 +25,7 @@ event_driver = EventDriver()
 users_driver = UsersDriver()
 likes_driver = LikesDriver()
 token_handler = TokenHandler()
+promocodes_driver = PromocodeDriver()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 
@@ -74,6 +76,7 @@ async def create_event(
     users_driver.handle_nonexistent_user(user.id)
 
     return event_driver.create_new_event(event_models.EventDB(**event_in.dict(), creator_id=user.id))
+    # promocodes_driver.create_promocode(event_id=event.id, promocodes=promocodes)
 
 
 @router.get(
@@ -176,6 +179,7 @@ async def delete_event(
     if event.creator_id != user.id:
         raise HTTPException(detail="user is not the creator", status_code=status.HTTP_401_UNAUTHORIZED)
 
+    promocodes_driver.delete_promocodes(event_id)
     likes_driver.delete_likes_by_event_id(event_id)
     event_driver.delete_event_by_id(event_id)
     return PlainTextResponse("Event deleted successfully", status_code=200)
