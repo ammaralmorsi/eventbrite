@@ -138,3 +138,20 @@ class EventDB(BaseModel):
 
 class EventOut(EventDB):
     id: id_type
+
+
+class EventCard(BaseModel):
+    id: id_type
+    title: Annotated[str, Field(
+        description="Title of the event",
+        example="Let's be loyal",
+    )]
+    start_date_time: Annotated[datetime, Field(
+        description="Start date and time of the event",
+        example="2023-05-01T15:30:00",
+    )]
+    image_link: image_link_type
+    is_online: Annotated[bool, Field(
+        description="Type of the location (venue or online)",
+        example="false",
+    )]
