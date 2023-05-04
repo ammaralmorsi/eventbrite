@@ -38,7 +38,7 @@ def check_amount(promocode_id, amount):
 
 
 @router.post(
-    "/{event_id}",
+    "/event_id/{event_id}",
     summary="Create promocodes by event id",
     description="This endpoint allows you to create promocodes by event id.",
     tags=["promocodes"],
@@ -63,7 +63,7 @@ async def create_promocodes_by_event_id(event_id: str, promocodes: List[PromoCod
 
 
 @router.put(
-    "promocode_id/{promocode_id}",
+    "/promocode_id/{promocode_id}",
     summary="Update promocode by promocode id",
     description="This endpoint allows you to update promocode by promocode id.",
     tags=["promocodes"],
@@ -95,7 +95,7 @@ async def update_promocode_by_id(promocode_id: str,
 
 
 @router.put(
-    "/promocode_id/{promocode_id}/{amount}",
+    "/promocode_id/{promocode_id}/amount/{amount}",
     summary="Update promocode amount by promocode id",
     description="This endpoint allows you to update promocode amount by promocode id.",
     tags=["promocodes"],
