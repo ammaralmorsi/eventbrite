@@ -19,6 +19,11 @@ class PromoCode(BaseModel):
         description="Limited amount of the promocode (must be greater than 0)",
         example=100,
     )] = None
+    current_amount: Annotated[int | None, Field(
+        gt=-1,
+        description="Current amount of the promocode",
+        example=100,
+    )] = None
     discount_percentage: Annotated[float, Field(
         gt=0,
         lt=1,
@@ -32,4 +37,11 @@ class PromoCode(BaseModel):
     end_date_time: Annotated[datetime, Field(
         description="End date and time of the promocode",
         example="2023-05-31T23:59:59",
+    )]
+
+
+class PromocodeDB(PromoCode):
+    event_id: Annotated[str, Field(
+        description="ID of the promocode",
+        example="gshacgjhvfdks",
     )]
