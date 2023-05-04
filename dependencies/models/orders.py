@@ -37,9 +37,14 @@ user_id_type = Annotated[str, Field(
     example="2dg3f4g5h6j7k8l9",
 )]
 
+tickets_count_type = Annotated[int, Field(
+    gt=0,
+    description="Number of tickets in the order (must be greater than 0)",
+    example=2,
+)]
 
 
-class OrderIn(BaseModel):
+class Order(BaseModel):#orderin
     first_name: name_type
     last_name: name_type
     email: email_type
@@ -47,8 +52,9 @@ class OrderIn(BaseModel):
     creation_date: creation_date_type
     price: price_type
     user_id: user_id_type
+    tickets_count : tickets_count_type=0
 
-class OrderOut(OrderIn):
+class OrderOut(Order):
         id: Annotated[str, Field(
         description="Order ID",
         example="23dfbsdbf23",

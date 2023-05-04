@@ -2,12 +2,20 @@ from dependencies.models.attendees import Attendees, AttendeesOut
 from dependencies.db.client import Client
 from bson.objectid import ObjectId
 from dependencies.utils.bson import convert_to_object_id
+from fastapi import HTTPException
+from fastapi import status
 
 
 class AttendeesDriver:
     def __init__(self):
         self.db = Client().get_instance().get_db()
         self.collection = self.db["attendees"]
+
+    def handle_nonexistent_attendee(self, attendee_id):
+        if not self.collection.find_one({"_id": convert_to_object_id(attendee_id)}):
+            raise HTTPException(
+                detail="attendee not found", status_code=status.HTTP_404_NOT_FOUND
+            )
 
     def add_attendee(self, event_id, attendee):
         attendee["event_id"] = event_id
@@ -24,3 +32,11 @@ class AttendeesDriver:
         for attendee in self.collection.find({"order_id": order_id}):
             res.append(attendee)
         return res
+
+    def update_attendee(self, attendee_id, attendee):
+        self.collection.update_one(
+            {"_id": convert_to_object_id(attendee_id)}, {"$set": attendee}
+        )
+
+    def delete_attendee(self, attendee_id):
+        self.collection.delete_one({"_id": convert_to_object_id(attendee_id)})

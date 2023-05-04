@@ -15,19 +15,59 @@ db_handler = OrderDriver()
 users_driver = UsersDriver()
 event_driver = EventDriver()
 
+
+@router.post(
+    "/{event_id}/add_order",
+    summary="Add order to event",
+    description="This endpoint allows you to add order to event.",
+    responses={
+        status.HTTP_200_OK: {
+            "description": "Order added successfully.",
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "Event not found.",
+        },
+    },
+)
+async def add_order(event_id: str,
+    order: Order = Body(...,description="Order model",
+    example={
+    "first_name":"John",
+    "last_name":"Doe",
+    "email":"ahmed@gmail.com",
+    "event_id":"sadgjh232",
+    "created_date":"2021-08-12T12:00:00.000Z",
+    "price":100,
+    "user_id":"sadgjh232",
+    })
+    ):
+    event_driver.handle_nonexistent_event(event_id)
+    db_handler.add_order(event_id, order)
+    return PlainTextResponse("Order added successfully.", status_code=status.HTTP_200_OK)
+
 @router.get(
     "/user_id/{user_id}",
     summary="Get orders by user id",
     description="This endpoint allows you to get orders by user id.",
     responses={
         status.HTTP_200_OK: {
-            "model": List[OrderOut],#i neeed to change this with example of order
             "description": "Orders retrieved successfully.",
-        },
+            "content": {
+                    "order_id":"sadgjh232",
+                    "first_name":"John",
+                    "last_name":"Doe",
+                    "email":"ahmed@gmail.com",
+                    "event_id":"sadgjh232",
+                    "created_date":"2021-08-12T12:00:00.000Z",
+                    "price":100,
+                    "user_id":"sadgjh232",
+                    "tickets_count":1,
+                    },
         status.HTTP_404_NOT_FOUND: {
             "description": "User not found.",
         },
     },
+    }
 )
 async def get_orders_by_user_id(user_id: str):
     users_driver.handle_nonexistent_user(user_id)
@@ -51,3 +91,21 @@ async def get_orders_by_user_id(user_id: str):
 async def get_orders_by_event_id(event_id: str):
     event_driver.handle_nonexistent_event(event_id)
     return db_handler.get_event_orders(event_id)
+
+@router.put(
+    "/{order_id}/edit_order",
+    summary="Edit order",
+    description="This endpoint allows you to edit order.",
+    responses={
+        status.HTTP_200_OK: {
+            "description": "Order edited successfully.",
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "Order not found.",
+        },
+    },
+)
+async def edit_order(order_id: str, order: Order = Body(...)):
+    db_handler.handle_nonexistent_order(order_id)
+    db_handler.edit_order(order_id, order)
+    return PlainTextResponse("Order edited successfully.", status_code=status.HTTP_200_OK)

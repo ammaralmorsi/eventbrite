@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated,Union
 from datetime import datetime
 
 from pydantic import BaseModel
@@ -21,10 +21,10 @@ reseved_ticket_type = Annotated[str, Field(
     example="VIP",
 )]
 
-order_id_type = Annotated[str, Field(
+order_id_type = Annotated[Union[str, None], Field(
     description="Order id if ticket is added from eventbrite, none if added manually",
-    example="123456789",
-)]=None #none if the ticket is added manually
+    example="hsjv4wgv43j3",
+)]#=None #none if the ticket is added manually
 
 event_id_type = Annotated[str, Field(
     description="Event id in db",
@@ -35,7 +35,7 @@ class Attendees(BaseModel):
     last_name: name_type
     email: email_type
     type_of_reseved_ticket:reseved_ticket_type
-    order_id:order_id_type
+    order_id:order_id_type=None
     event_id:event_id_type
 
 class AttendeesOut(Attendees):
