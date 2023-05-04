@@ -38,7 +38,7 @@ class PromocodeDriver:
             ]
         return self.collection.insert_many(promocodes)
 
-    def delete_promocodes(self, event_id: str):
+    def delete_promocodes_by_event_id(self, event_id: str):
         return self.collection.delete_many({"event_id": event_id})
 
     def delete_promocode_by_id(self, promocode_id: str):
