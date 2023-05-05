@@ -1,4 +1,4 @@
-from dependencies.models.orders import Order, OrderOut
+from dependencies.models.orders import Order, OrderOut,OrderDB
 from dependencies.db.client import Client
 from bson.objectid import ObjectId
 from dependencies.utils.bson import convert_to_object_id
@@ -15,6 +15,11 @@ class OrderDriver:
         if not self.collection.find_one({"_id": convert_to_object_id(order_id)}):
             raise HTTPException(detail="order not found", status_code=status.HTTP_404_NOT_FOUND)
 
+    def upate_tickets_count(self, order_id, increment:int):
+        order = self.collection.find_one({"_id": convert_to_object_id(order_id)})
+        tickets_count = order["tickets_count"] + increment
+        self.collection.update_one({"_id": convert_to_object_id(order_id)}, {"$set": {"tickets_count": tickets_count}})
+
     def get_user_orders(self, user_id:str):
         res = []
         for order in self.collection.find({"user_id": user_id}):
@@ -29,20 +34,15 @@ class OrderDriver:
 
     def add_order(self, event_id:str, order:Order):
         order.event_id = event_id
-        order.tickets_count = len(order.attendees)
-        self.collection.insert_one(order.dict())
+        order_db = OrderDB(**order.dict())
+        order_db.tickets_count = len(order.attendees)
+        self.collection.insert_one(order_db.dict())
 
     def edit_order(self, order_id:str, updated_attributes: dict):
         self.collection.update_one({"_id": convert_to_object_id(order_id)}, {"$set": updated_attributes})
+        order = self.collection.find_one({"_id": convert_to_object_id(order_id)})
+
+        self.collection.update_one({"_id": convert_to_object_id(order_id)}, {"$set": {"tickets_count": len(order["attendees"])}})
 
     def delete_order(self, order_id:str):
         self.collection.delete_one({"_id": convert_to_object_id(order_id)})
-
-    def upate_tickets_count(self, order_id, increment:int):
-        order = self.collection.find_one({"_id": convert_to_object_id(order_id)})
-        tickets_count = order["tickets_count"] + increment
-        self.collection.update_one({"_id": convert_to_object_id(order_id)}, {"$set": {"tickets_count": tickets_count}})
-
-
-
-

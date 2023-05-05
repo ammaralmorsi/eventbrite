@@ -87,7 +87,7 @@ class Order(BaseModel):#orderin
     attendees: Attendees_type
 
 class OrderDB(Order):
-    tickets_count: tickets_count_type=0
+    tickets_count: tickets_count_type
 
 
 class OrderOut(OrderDB):
