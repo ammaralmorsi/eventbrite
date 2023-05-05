@@ -33,7 +33,7 @@ price_type = Annotated[int, Field(
 )]
 
 user_id_type = Annotated[str, Field(
-    description="user ID in db",
+    description="user ID(owner) in db",
     example="2dg3f4g5h6j7k8l9",
 )]
 
@@ -43,6 +43,37 @@ tickets_count_type = Annotated[int, Field(
     example=2,
 )]
 
+normally_ordered_type = Annotated[bool, Field(
+    description="True if the order is normally ordered, False if creator makes it",
+    example=True,
+)]
+
+reseved_ticket_type = Annotated[str, Field(
+    description="Ticket type of the attendee",
+    example="VIP",
+)]
+
+class Attendees(BaseModel):
+    first_name: name_type
+    last_name: name_type
+    email: email_type
+    type_of_reseved_ticket:reseved_ticket_type
+
+Attendees_type = Annotated[list[Attendees], Field(
+    description="Attendees of the order",
+    example=[{
+         "first_name":"John",
+         "last_name":"Doe",
+         "email":"ahmed@gmail.com",
+         "type_of_reseved_ticket":"VIP",
+         },
+         {
+        "first_name":"John",
+        "last_name":"Doe",
+         "email":"ahmed@gmail.com",
+         "type_of_reseved_ticket":"VIP",
+        }],
+)]
 
 class Order(BaseModel):#orderin
     first_name: name_type
@@ -52,9 +83,14 @@ class Order(BaseModel):#orderin
     creation_date: creation_date_type
     price: price_type
     user_id: user_id_type
-    tickets_count : tickets_count_type=0
+    normally_ordered: normally_ordered_type
+    attendees: Attendees_type
 
-class OrderOut(Order):
+class OrderDB(Order):
+    tickets_count: tickets_count_type=0
+
+
+class OrderOut(OrderDB):
         id: Annotated[str, Field(
         description="Order ID",
         example="23dfbsdbf23",
