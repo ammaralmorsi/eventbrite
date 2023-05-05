@@ -54,7 +54,7 @@ async def add_order(event_id: str,
         }]
     })
 ):
-    #event_driver.handle_nonexistent_event(event_id)
+    event_driver.handle_nonexistent_event(event_id)
     db_handler.add_order(event_id, order)
     return PlainTextResponse("Order added successfully.", status_code=status.HTTP_200_OK)
 
@@ -159,6 +159,24 @@ async def get_orders_by_event_id(event_id: str):
     }
 )
 async def edit_order(order_id: str,updated_attributes: dict):
-    #db_handler.handle_nonexistent_order(order_id)
+    db_handler.handle_nonexistent_order(order_id)
     db_handler.edit_order(order_id, updated_attributes)
     return PlainTextResponse("Order edited successfully.", status_code=status.HTTP_200_OK)
+
+@router.delete(
+    "/{order_id}/delete_order",
+    summary="Delete order",
+    description="This endpoint allows you to delete order.",
+    responses={
+        status.HTTP_200_OK:{
+            "description": "Order deleted successfully.",
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "Order not found.",
+        }
+    }
+)
+async def delete_order(order_id: str):
+    db_handler.handle_nonexistent_order(order_id)
+    db_handler.delete_order(order_id)
+    return PlainTextResponse("Order deleted successfully.", status_code=status.HTTP_200_OK)
