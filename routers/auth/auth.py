@@ -162,6 +162,7 @@ async def verify_email(token: Annotated[str, Depends(oath2_scheme)]) -> PlainTex
     }
 )
 async def login(user_in: Annotated[OAuth2PasswordRequestForm, Depends()]) -> users.UserOutLogin:
+    users_driver.validate(user_in.username)
     user_in = users.UserInLogin(email=user_in.username, password=user_in.password)
 
     users_driver.handle_nonexistent_email(user_in.email)

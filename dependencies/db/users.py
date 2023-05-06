@@ -1,9 +1,11 @@
 from datetime import datetime
 
+import email_validator
 from fastapi import HTTPException
 from fastapi import status
 
 from pymongo import errors as mongo_errors
+from email_validator import validate_email
 
 from dependencies.models import users
 from dependencies.db.client import Client
@@ -97,3 +99,10 @@ class UsersDriver:
                 self.collection.update_one({"_id": convert_to_object_id(user_id)}, {"$set": {"avatar_url": avatar}})
         except mongo_errors.PyMongoError:
             raise HTTPException(detail="database error", status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def validate(self, email):
+        try:
+            new_email = validate_email(email)
+        except email_validator.EmailSyntaxError or email_validator.EmailNotValidError:
+            raise HTTPException(detail="invalid email", status_code=status.HTTP_400_BAD_REQUEST)
+
