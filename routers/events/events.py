@@ -197,6 +197,40 @@ async def delete_event(
 @router.get(
     "/search",
     summary="Search for events",
+    responses={
+        status.HTTP_200_OK: {
+            "description": "events found",
+            "content": {
+                "creator_id": "2dg3f4g5h6j7k8l9",
+                "basic_info": {
+                    "title": "Let's be loyal",
+                    "organizer": "Loyalty Organization",
+                    "category": "Loyalty",
+                    "sub_category": "Loyalty"
+                },
+                "image_link": "https://www.example.com/image.png",
+                "summary": "This is a summary of the event",
+                "description": "This is a description of the event",
+                "state": {
+                    "is_public": True,
+                    "publish_date_time": "2023-05-01T09:00:00"
+                },
+                "date_and_time": {
+                    "start_date_time": "2023-05-01T15:30:00",
+                    "end_date_time": "2023-05-01T18:30:00",
+                    "is_display_start_date": True,
+                    "is_display_end_date": True,
+                    "time_zone": "US/Pacific",
+                    "event_page_language": "en-US"
+                },
+                "location": {
+                    "type": "venue",
+                    "location": "123 Main St, San Francisco, CA 94111"
+                },
+                "id": "2dg3f4g5h6j7k8l9"
+            }
+        },
+    }
 )
 async def search_events(
         city: str,

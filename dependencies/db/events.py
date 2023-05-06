@@ -100,3 +100,10 @@ class EventDriver:
 
         except mongo_errors.PyMongoError:
             raise HTTPException(detail="database error", status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def get_events_by_creator_id(self, creator_id):
+        try:
+            events = self.collection.find({"creator_id": creator_id})
+            return [models.EventOut(id=str(event["_id"]), **event) for event in events]
+        except mongo_errors.PyMongoError:
+            raise HTTPException(detail="database error", status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
