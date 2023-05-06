@@ -53,21 +53,24 @@ reseved_ticket_type = Annotated[str, Field(
     example="VIP",
 )]
 
-class Attendees(BaseModel):
+class Attendee(BaseModel):
+    attendee_id:user_id_type
     first_name: name_type
     last_name: name_type
     email: email_type
     type_of_reseved_ticket:reseved_ticket_type
 
-Attendees_type = Annotated[list[Attendees], Field(
+Attendees_type = Annotated[list[Attendee], Field(
     description="Attendees of the order",
     example=[{
+         "attendee_id":"2dg3f4g5h6j7k8l9",
          "first_name":"John",
          "last_name":"Doe",
          "email":"ahmed@gmail.com",
          "type_of_reseved_ticket":"VIP",
          },
          {
+        "attendee_id":"2dg3f4g5h6j7k820",
         "first_name":"John",
         "last_name":"Doe",
          "email":"ahmed@gmail.com",
@@ -87,7 +90,7 @@ class Order(BaseModel):#orderin
     attendees: Attendees_type
 
 class OrderDB(Order):
-    tickets_count: tickets_count_type
+    tickets_count: tickets_count_type=0
 
 
 class OrderOut(OrderDB):

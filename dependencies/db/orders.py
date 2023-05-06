@@ -1,4 +1,4 @@
-from dependencies.models.orders import Order, OrderOut,OrderDB
+from dependencies.models.orders import Order, OrderOut,OrderDB, Attendee
 from dependencies.db.client import Client
 from bson.objectid import ObjectId
 from dependencies.utils.bson import convert_to_object_id
@@ -46,3 +46,34 @@ class OrderDriver:
 
     def delete_order(self, order_id:str):
         self.collection.delete_one({"_id": convert_to_object_id(order_id)})
+
+    def get_attendees(self, order_id:str):
+        order = self.collection.find_one({"_id": convert_to_object_id(order_id)})
+        return order["attendees"]
+
+    def get_order(self, order_id:str):
+        order = self.collection.find_one({"_id": convert_to_object_id(order_id)})
+        return OrderOut(id=str(order["_id"]), **order)
+
+    def handle_nonexistent_attendee(self, order_id:str, attendee_id:str):
+        order = self.collection.find_one({"_id": convert_to_object_id(order_id)})
+        attendees = order["attendees"]
+        for attendee in attendees:
+            if attendee["attendee_id"] == attendee_id:
+                return
+        raise HTTPException(detail="attendee not found", status_code=status.HTTP_404_NOT_FOUND)
+
+    def add_attendee(self, order_id:str, attendee:Attendee):
+        self.collection.update_one({"_id": convert_to_object_id(order_id)}, {"$push": {"attendees": attendee.dict()}})
+        self.upate_tickets_count(order_id, 1)
+
+    # def add_attendee2(self, order_id:str, attendee:dict):#attendee:Attendee please change it
+    #     self.collection.update_one({"_id": convert_to_object_id(order_id)}, {"$push": {"attendees": attendee}})
+    #     self.upate_tickets_count(order_id, 1)
+
+    def delete_attendee(self, order_id:str, attendee_id:str):
+        self.collection.update_one({"_id": convert_to_object_id(order_id)}, {"$pull": {"attendees": {"attendee_id": attendee_id}}})
+        self.upate_tickets_count(order_id, -1)
+
+    def edit_attendee(self, order_id:str, attendee_id:str, updated_attributes:dict):
+        self.collection.update_one({"_id": convert_to_object_id(order_id), "attendees.attendee_id": attendee_id}, {"$set": {"attendees.$": updated_attributes}})
