@@ -583,7 +583,6 @@ async def is_followed(user_id: str, token: Annotated[str, Depends(oauth2_scheme)
         return PlainTextResponse("false", status_code=status.HTTP_404_NOT_FOUND)
 
 
-
 @router.put(
     "/me/edit",
     summary="edit user firstname, lastname, avatar",
