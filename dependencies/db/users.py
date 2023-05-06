@@ -102,7 +102,10 @@ class UsersDriver:
 
     def validate(self, email):
         try:
-            new_email = validate_email(email)
+            if validate_email(email):
+                pass
         except email_validator.EmailSyntaxError or email_validator.EmailNotValidError:
             raise HTTPException(detail="invalid email", status_code=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            raise HTTPException(detail=str(e), status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
