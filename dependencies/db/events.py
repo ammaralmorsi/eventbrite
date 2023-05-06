@@ -9,6 +9,7 @@ from pymongo import errors as mongo_errors
 
 from dependencies.db.client import Client
 import dependencies.models.events as models
+from dependencies.db.tickets import TicketDriver
 from dependencies.utils.bson import convert_to_object_id
 
 
@@ -16,6 +17,7 @@ class EventDriver:
     def __init__(self):
         self.db = Client.get_instance().get_db()
         self.collection = self.db["events"]
+        self.tickets_driver = TicketDriver()
 
     def handle_nonexistent_event(self, event_id: str):
         if not self.event_exists(event_id):
@@ -51,6 +53,7 @@ class EventDriver:
             self,
             city: str,
             online: Optional[bool] = None,
+            free: Optional[bool] = None,
             title: Optional[str] = None,
             start_date: Optional[str] = None,
             end_date: Optional[str] = None,
@@ -89,7 +92,18 @@ class EventDriver:
                 category_pattern = get_pattern(category)
                 query["basic_info.category"] = {"$regex": category_pattern}
 
-            events = self.collection.find(query)
+            events_out = [models.EventOut(id=str(event["_id"]), **event) for event in self.collection.find(query)]
+
+            if free is not None:
+                events_out = [event for event in events_out if self.tickets_driver.is_free_event(event.id) == free]
+            return events_out
+
+        except mongo_errors.PyMongoError:
+            raise HTTPException(detail="database error", status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def get_events_by_creator_id(self, creator_id):
+        try:
+            events = self.collection.find({"creator_id": creator_id})
             return [models.EventOut(id=str(event["_id"]), **event) for event in events]
         except mongo_errors.PyMongoError:
             raise HTTPException(detail="database error", status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
