@@ -201,6 +201,7 @@ async def delete_event(
 async def search_events(
         city: str,
         online: Optional[bool] = None,
+        free: Optional[bool] = None,
         title: Optional[str] = None,
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None,
@@ -209,6 +210,7 @@ async def search_events(
     return event_driver.search_events(
         city,
         online,
+        free,
         title,
         start_date,
         end_date,
