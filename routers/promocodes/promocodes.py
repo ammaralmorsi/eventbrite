@@ -95,7 +95,7 @@ async def update_promocode_by_id(promocode_id: str,
 
 
 @router.put(
-    "/promocode_id/{promocode_id}/amount/{amount}",
+    "/promocode_id/{promocode_id}/quantity/{quantity}",
     summary="Update promocode amount by promocode id",
     description="This endpoint allows you to update promocode amount by promocode id.",
     tags=["promocodes"],
@@ -169,7 +169,7 @@ async def delete_promocodes_by_event_id(event_id: str):
     if not db_handler.is_valid_event_id(event_id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event ID is invalid")
 
-    db_handler.delete_promocodes(event_id)
+    db_handler.delete_promocodes_by_event_id(event_id)
     return PlainTextResponse("Promocodes deleted successfully", status_code=200)
 
 

@@ -6,9 +6,8 @@ from routers.categories import categories
 from routers.auth import auth
 from routers.events import events
 from routers.users import users
-
-
-
+from routers.tickets import tickets
+from routers.promocodes import promocodes
 
 
 app = FastAPI(
@@ -32,6 +31,7 @@ app.include_router(categories.router)
 app.include_router(auth.router)
 app.include_router(events.router)
 app.include_router(users.router)
-
+app.include_router(tickets.router)
+app.include_router(promocodes.router)
 
 add_pagination(app)
