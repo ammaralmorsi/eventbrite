@@ -537,6 +537,53 @@ async def get_followed_users(token: Annotated[str, Depends(oauth2_scheme)]) -> l
     return [users_driver.get_user_by_id(user_id) for user_id in follows_driver.get_followed_users(user.id)]
 
 
+@router.get(
+    "/me/user/{user_id}/is_followed",
+    summary="check if user is followed",
+    description="check if user is followed",
+    response_class=PlainTextResponse,
+    responses={
+        status.HTTP_200_OK: {
+            "description": "user is followed",
+            "content": {
+                "text/plain": {
+                    "example": "true"
+                },
+            }
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "user is not followed",
+            "content": {
+                "text/plain": {
+                    "example": "false"
+                },
+            }
+        },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "invalid token",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "invalid toked"
+                    }
+                }
+            }
+        }
+    }
+)
+async def is_followed(user_id: str, token: Annotated[str, Depends(oauth2_scheme)]):
+    user = token_handler.get_user(token)
+
+    users_driver.handle_nonexistent_user(user.id)
+    users_driver.handle_nonexistent_user(user_id)
+
+    if follows_driver.is_user_followed(user.id, user_id):
+        return PlainTextResponse("true", status_code=status.HTTP_200_OK)
+    else:
+        return PlainTextResponse("false", status_code=status.HTTP_404_NOT_FOUND)
+
+
+
 @router.put(
     "/me/edit",
     summary="edit user firstname, lastname, avatar",
