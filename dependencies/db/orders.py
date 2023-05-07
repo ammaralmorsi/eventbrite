@@ -10,10 +10,16 @@ class OrderDriver:
     def __init__(self):
         self.db = Client().get_instance().get_db()
         self.collection = self.db["orders"]
+        self.atteendee_collection = self.db["attendees"]
 
     def handle_nonexistent_order(self, order_id:str):
         if not self.collection.find_one({"_id": convert_to_object_id(order_id)}):
             raise HTTPException(detail="order not found", status_code=status.HTTP_404_NOT_FOUND)
+
+    def add_attendee_and_get_id(self, attendee:Attendee):
+        attendee_db = self.atteendee_collection.insert_one(attendee.dict()).inserted_id
+        id=str(attendee_db["_id"])
+        return id
 
     def upate_tickets_count(self, order_id, increment:int):
         order = self.collection.find_one({"_id": convert_to_object_id(order_id)})
@@ -32,11 +38,12 @@ class OrderDriver:
             res.append(OrderOut(id=str(order["_id"]), **order))
         return res
 
-    def add_order(self, event_id:str, order:Order):
+    def add_order(self, event_id:str, order:Order)->OrderOut:
         order.event_id = event_id
         order_db = OrderDB(**order.dict())
         order_db.tickets_count = len(order.attendees)
-        self.collection.insert_one(order_db.dict())
+        inserted_id = self.collection.insert_one(order_db.dict()).inserted_id
+        return OrderOut(id=str(inserted_id), **order_db.dict())
 
     def edit_order(self, order_id:str, updated_attributes: dict):
         self.collection.update_one({"_id": convert_to_object_id(order_id)}, {"$set": updated_attributes})
@@ -77,3 +84,4 @@ class OrderDriver:
 
     def edit_attendee(self, order_id:str, attendee_id:str, updated_attributes:dict):
         self.collection.update_one({"_id": convert_to_object_id(order_id), "attendees.attendee_id": attendee_id}, {"$set": {"attendees.$": updated_attributes}})
+

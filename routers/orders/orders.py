@@ -35,10 +35,10 @@ async def add_order(event_id: str,
     "first_name":"John",
     "last_name":"Doe",
     "email":"ahmed@gmail.com",
-    "event_id":"event11",
+    "event_id":"64542600a4505e4f0d19e18f",
     "creation_date":"2021-08-12T12:00:00.000Z",
     "price":100,
-    "user_id":"ahmed55",
+    "user_id":"645425c55281f2c01fee6995",
     "normally_ordered":True,
     "attendees":[ {
         "attendee_id":"jhsdrugksrr86e68s7d",
@@ -55,11 +55,12 @@ async def add_order(event_id: str,
         "type_of_reseved_ticket":"REGULAR",
         }]
     })
-):
+)->OrderOut:
     event_driver.handle_nonexistent_event(event_id)
     users_driver.handle_nonexistent_user(order.user_id)
-    db_handler.add_order(event_id, order)
-    return PlainTextResponse("Order added successfully.", status_code=status.HTTP_200_OK)
+    order_added=db_handler.add_order(event_id, order)
+    return order_added
+
 
 @router.get(
     "/order_id/{order_id}",
@@ -98,7 +99,7 @@ async def add_order(event_id: str,
     }
 )
 async def get_order(order_id: str):
-    OrderDriver.handle_nonexistent_order(order_id)
+    db_handler.handle_nonexistent_order(order_id)
     return db_handler.get_order(order_id)
 
 @router.get(

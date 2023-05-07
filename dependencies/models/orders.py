@@ -54,7 +54,7 @@ reseved_ticket_type = Annotated[str, Field(
 )]
 
 class Attendee(BaseModel):
-    attendee_id:user_id_type
+    attendee_id:user_id_type=0
     first_name: name_type
     last_name: name_type
     email: email_type
@@ -96,5 +96,11 @@ class OrderDB(Order):
 class OrderOut(OrderDB):
         id: Annotated[str, Field(
         description="Order ID",
+        example="23dfbsdbf23",
+    )]
+
+class attendee_db(Attendee):
+    id: Annotated[str, Field(
+        description="Attendee ID",
         example="23dfbsdbf23",
     )]
