@@ -147,14 +147,34 @@ async def verify_email(token: Annotated[str, Depends(oath2_scheme)]) -> PlainTex
                         "detail": "wrong password or email is not verified"
                     }
                 }
-            },
-            status.HTTP_404_NOT_FOUND: {
-                "description": "email not found",
-                "content": {
-                    "application/json": {
-                        "example": {
-                            "detail": "email not found"
-                        }
+            }
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "email not found",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "email not found"
+                    }
+                }
+            }
+        },
+        status.HTTP_400_BAD_REQUEST: {
+            "description": "invalid email",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "invalid email"
+                    }
+                }
+            }
+        },
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "description": "wrong domain name",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "invalid domain name for the email"
                     }
                 }
             }
@@ -162,6 +182,7 @@ async def verify_email(token: Annotated[str, Depends(oath2_scheme)]) -> PlainTex
     }
 )
 async def login(user_in: Annotated[OAuth2PasswordRequestForm, Depends()]) -> users.UserOutLogin:
+    users_driver.validate(user_in.username)
     user_in = users.UserInLogin(email=user_in.username, password=user_in.password)
 
     users_driver.handle_nonexistent_email(user_in.email)
@@ -169,6 +190,81 @@ async def login(user_in: Annotated[OAuth2PasswordRequestForm, Depends()]) -> use
 
     if not password_handler.verify_password(user_in.password, user_db.password):
         raise HTTPException(detail="wrong password", status_code=status.HTTP_401_UNAUTHORIZED)
+
+    encoded_token = token_handler.encode_token(users.UserToken(**user_db.dict()))
+    if not user_db.is_verified:
+        email_handler.send_email(user_db.email, encoded_token, EmailType.SIGNUP_VERIFICATION)
+        raise HTTPException(detail="email is not verified", status_code=status.HTTP_401_UNAUTHORIZED)
+
+    return users.UserOutLogin(access_token=encoded_token)
+
+
+@router.post(
+    "/login-with-google",
+    summary="generate access token",
+    description="login with google email and get access token",
+    response_model=users.UserOutLogin,
+    responses={
+        status.HTTP_200_OK: {
+            "description": "login successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
+                                        "eyJlbWFpbCI6ImFkbWluQGV4YW1wbGUuY29tIiwiaWF0IjoxNjIyNjQyNjQyLCJleHAiOjE",
+                        "token_type": "bearer"
+                    }
+                }
+            }
+        },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "email is not verified",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "email is not verified"
+                    }
+                }
+            }
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "email not found",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "email not found"
+                    }
+                }
+            }
+        },
+        status.HTTP_400_BAD_REQUEST: {
+            "description": "invalid email",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "invalid email"
+                    }
+                }
+            }
+        },
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "description": "wrong domain name",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "invalid domain name for the email"
+                    }
+                }
+            }
+        }
+    }
+)
+async def login(user_in: Annotated[OAuth2PasswordRequestForm, Depends()]) -> users.UserOutLogin:
+    users_driver.validate(user_in.username)
+    user_in = users.UserInLogin(email=user_in.username, password=user_in.password)
+
+    users_driver.handle_nonexistent_email(user_in.email)
+    user_db: users.UserOut = users_driver.get_user_by_email(user_in.email)
 
     encoded_token = token_handler.encode_token(users.UserToken(**user_db.dict()))
     if not user_db.is_verified:

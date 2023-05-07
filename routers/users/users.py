@@ -537,6 +537,52 @@ async def get_followed_users(token: Annotated[str, Depends(oauth2_scheme)]) -> l
     return [users_driver.get_user_by_id(user_id) for user_id in follows_driver.get_followed_users(user.id)]
 
 
+@router.get(
+    "/me/user/{user_id}/is_followed",
+    summary="check if user is followed",
+    description="check if user is followed",
+    response_class=PlainTextResponse,
+    responses={
+        status.HTTP_200_OK: {
+            "description": "user is followed",
+            "content": {
+                "text/plain": {
+                    "example": "true"
+                },
+            }
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "user is not followed",
+            "content": {
+                "text/plain": {
+                    "example": "false"
+                },
+            }
+        },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "invalid token",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "invalid toked"
+                    }
+                }
+            }
+        }
+    }
+)
+async def is_followed(user_id: str, token: Annotated[str, Depends(oauth2_scheme)]):
+    user = token_handler.get_user(token)
+
+    users_driver.handle_nonexistent_user(user.id)
+    users_driver.handle_nonexistent_user(user_id)
+
+    if follows_driver.is_user_followed(user.id, user_id):
+        return PlainTextResponse("true", status_code=status.HTTP_200_OK)
+    else:
+        return PlainTextResponse("false", status_code=status.HTTP_404_NOT_FOUND)
+
+
 @router.put(
     "/me/edit",
     summary="edit user firstname, lastname, avatar",
@@ -582,3 +628,70 @@ async def edit_info(
     users_driver.handle_nonexistent_user(user.id)
     users_driver.edit_info(user.id, firstname, lastname, avatar_url)
     return PlainTextResponse("User information updated successfully", status_code=status.HTTP_200_OK)
+
+
+@router.get(
+    "/me/created/events",
+    summary="get all created events by the user",
+    description="get all created events by the user",
+    responses={
+        status.HTTP_200_OK: {
+            "description": "list of created events",
+            "content": {
+                "creator_id": "2dg3f4g5h6j7k8l9",
+                "basic_info": {
+                    "title": "Let's be loyal",
+                    "organizer": "Loyalty Organization",
+                    "category": "Loyalty",
+                    "sub_category": "Loyalty"
+                },
+                "image_link": "https://www.example.com/image.png",
+                "summary": "This is a summary of the event",
+                "description": "This is a description of the event",
+                "state": {
+                    "is_public": True,
+                    "publish_date_time": "2023-05-01T09:00:00"
+                },
+                "date_and_time": {
+                    "start_date_time": "2023-05-01T15:30:00",
+                    "end_date_time": "2023-05-01T18:30:00",
+                    "is_display_start_date": True,
+                    "is_display_end_date": True,
+                    "time_zone": "US/Pacific",
+                    "event_page_language": "en-US"
+                },
+                "location": {
+                    "type": "venue",
+                    "location": "123 Main St, San Francisco, CA 94111"
+                },
+                "id": "2dg3f4g5h6j7k8l9"
+            }
+        },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "invalid token",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "invalid toked"
+                    }
+                }
+            }
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "user not found",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "user not found"
+                    }
+                }
+            }
+        }
+    }
+)
+async def get_created_events(token: Annotated[str, Depends(oauth2_scheme)]) -> list[events.EventOut]:
+    user = token_handler.get_user(token)
+
+    users_driver.handle_nonexistent_user(user.id)
+
+    return event_driver.get_events_by_creator_id(user.id)

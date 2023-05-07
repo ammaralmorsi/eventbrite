@@ -24,11 +24,11 @@ class PromocodeDriver:
     def get_promocodes(self, event_id: str) -> list[PromocodeDB]:
         res = []
         for promocode in self.collection.find({"event_id": event_id}):
-            res.append(PromocodeDB(**promocode))
+            res.append(PromocodeDB(id=str(promocode["_id"]), **promocode))
         return res
 
     def get_promocode_by_id(self, promocode_id: str) -> PromocodeDB:
-        return PromocodeDB(**self.collection.find_one({"_id": ObjectId(promocode_id)}))
+        return PromocodeDB(id=promocode_id, **self.collection.find_one({"_id": ObjectId(promocode_id)}))
 
     def create_promocodes(self, event_id,promocodes: list[PromoCode]):
         promocodes = [
@@ -38,7 +38,7 @@ class PromocodeDriver:
             ]
         return self.collection.insert_many(promocodes)
 
-    def delete_promocodes(self, event_id: str):
+    def delete_promocodes_by_event_id(self, event_id: str):
         return self.collection.delete_many({"event_id": event_id})
 
     def delete_promocode_by_id(self, promocode_id: str):

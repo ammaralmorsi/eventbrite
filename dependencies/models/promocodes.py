@@ -24,10 +24,13 @@ class PromoCode(BaseModel):
         description="Current amount of the promocode",
         example=100,
     )] = None
-    discount_percentage: Annotated[float, Field(
+    is_percentage: Annotated[bool, Field(
+        description="Flag indicating if the promocode is percentage or amount",
+        example=True,
+    )]
+    discount_amount: Annotated[float, Field(
         gt=0,
-        lt=1,
-        description="Discount percentage (must be greater than 0 and less than 1)",
+        description="Discount percentage or amount(must be greater than 0)",
         example=0.1,
     )]
     start_date_time: Annotated[datetime, Field(
@@ -44,4 +47,8 @@ class PromocodeDB(PromoCode):
     event_id: Annotated[str, Field(
         description="ID of the promocode",
         example="gshacgjhvfdks",
+    )]
+    id: Annotated[str, Field(
+        description="ID of the promocode",
+        example="gshacgjhvfdry",
     )]

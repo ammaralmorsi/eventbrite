@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, status, Body
 from fastapi.responses import PlainTextResponse
 from typing import List, Annotated
 from dependencies.db.promocodes import PromocodeDriver
-from dependencies.models.promocodes import PromoCode
+from dependencies.models.promocodes import PromoCode, PromocodeDB
 
 router = APIRouter(
     prefix="/promocodes",
@@ -79,8 +79,10 @@ async def update_promocode_by_id(promocode_id: str,
                                      description="Promocode to be updated",
                                      example={
                                          "name": "SALE10",
+                                         "is_limited": True,
                                          "limited_amount": 100,
-                                         "discount_percentage": 0.1,
+                                         "is_percentage": True,
+                                         "discount_amount": 0.1,
                                          "start_date_time": "2023-05-01T00:00:00",
                                          "end_date_time": "2023-05-31T23:59:59"
                                      }
@@ -95,7 +97,7 @@ async def update_promocode_by_id(promocode_id: str,
 
 
 @router.put(
-    "/promocode_id/{promocode_id}/amount/{amount}",
+    "/promocode_id/{promocode_id}/quantity/{quantity}",
     summary="Update promocode amount by promocode id",
     description="This endpoint allows you to update promocode amount by promocode id.",
     tags=["promocodes"],
@@ -131,7 +133,7 @@ async def update_promocode_amount_by_id(promocode_id: str, amount: int):
         404: {"description": "Event ID not found"},
     },
 )
-async def get_promocodes_by_event_id(event_id: str) -> List[PromoCode]:
+async def get_promocodes_by_event_id(event_id: str) -> List[PromocodeDB]:
     if not db_handler.is_valid_event_id(event_id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event ID not found")
 
@@ -169,7 +171,7 @@ async def delete_promocodes_by_event_id(event_id: str):
     if not db_handler.is_valid_event_id(event_id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event ID is invalid")
 
-    db_handler.delete_promocodes(event_id)
+    db_handler.delete_promocodes_by_event_id(event_id)
     return PlainTextResponse("Promocodes deleted successfully", status_code=200)
 
 
