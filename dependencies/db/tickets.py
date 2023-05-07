@@ -15,7 +15,11 @@ class TicketDriver:
                 event_id=event_id, available_quantity=ticket.max_quantity, **ticket.dict()
             ).dict() for ticket in tickets
         ]
-        return self.collection.insert_many(tickets)
+        inserted = self.collection.insert_many(tickets).inserted_ids
+        inserted = [
+            TicketOut(id=str(ticket), **self.collection.find_one({"_id": ticket})) for ticket in inserted
+        ]
+        return inserted
 
     def get_tickets(self, event_id) -> list[TicketOut]:
         res = []
