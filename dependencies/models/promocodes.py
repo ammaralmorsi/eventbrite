@@ -48,3 +48,7 @@ class PromocodeDB(PromoCode):
         description="ID of the promocode",
         example="gshacgjhvfdks",
     )]
+    id: Annotated[str, Field(
+        description="ID of the promocode",
+        example="gshacgjhvfdry",
+    )]
