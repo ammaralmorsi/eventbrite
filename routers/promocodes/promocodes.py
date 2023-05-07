@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, status, Body
 from fastapi.responses import PlainTextResponse
 from typing import List, Annotated
 from dependencies.db.promocodes import PromocodeDriver
-from dependencies.models.promocodes import PromoCode, PromocodeDB
+from dependencies.models.promocodes import PromoCode, PromocodeOut
 
 router = APIRouter(
     prefix="/promocodes",
@@ -43,7 +43,6 @@ def check_amount(promocode_id, amount):
     description="This endpoint allows you to create promocodes by event id.",
     tags=["promocodes"],
     responses={
-        200: {"description": "Promocodes created successfully"},
         404: {"description": "Event ID is invalid"},
         500: {"description": "Promocodes creation failed"},
     },
@@ -56,8 +55,11 @@ async def create_promocodes_by_event_id(event_id: str, promocodes: List[PromoCod
         if code.current_amount > code.limited_amount:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                                 detail=f"Current amount can't be more than limited amount for {code.name}")
-    if db_handler.create_promocodes(event_id, promocodes):
-        return PlainTextResponse("Promocodes created successfully", status_code=200)
+        elif code.current_amount is None:
+            code.current_amount = code.limited_amount
+    insertion = db_handler.create_promocodes(event_id, promocodes)
+    if insertion:
+        return insertion
     else:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Promocodes creation failed")
 
@@ -133,7 +135,7 @@ async def update_promocode_amount_by_id(promocode_id: str, amount: int):
         404: {"description": "Event ID not found"},
     },
 )
-async def get_promocodes_by_event_id(event_id: str) -> List[PromocodeDB]:
+async def get_promocodes_by_event_id(event_id: str) -> List[PromocodeOut]:
     if not db_handler.is_valid_event_id(event_id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event ID not found")
 
