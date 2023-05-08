@@ -62,6 +62,32 @@ async def add_attendee(event_id: str,
     return db_handler.add_attendee(event_id, attendee)
 
 @router.get(
+    "/{attendee_id}/get_attendee",
+    summary="Get attendee by id",
+    description="This endpoint allows you to get attendee by id.",
+    responses={
+        status.HTTP_200_OK: {
+            "description":"Attendee retrieved successfully",
+            "content": {
+                "first_name":"John",
+                "last_name":"Doe",
+                "email":"ahmed@gmail.com",
+                "type_of_reseved_ticket":"VIP",
+                "order_id":"64594a6ec8bd709f5881b8a8",
+                "event_id":"6459447df0c9d6f57d894a60",
+                "id":"sadgjh232",
+            }
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "Attendee not found.",
+        }
+    }
+)
+async def get_attendee(attendee_id: str):
+    db_handler.handle_nonexistent_attendee(attendee_id)
+    return db_handler.get_attendee(attendee_id)
+
+@router.get(
     "/{event_id}/get_attendees",
     summary="Get attendees by event id",
     description="This endpoint allows you to get attendees by event id.",

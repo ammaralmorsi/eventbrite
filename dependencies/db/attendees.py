@@ -21,6 +21,10 @@ class AttendeeDriver:
         inserted_id=self.collection.insert_one(attendee.dict()).inserted_id
         return AttendeeOut(id=str(inserted_id), **attendee.dict())
 
+    def get_attendee(self, attendee_id):
+        attendee = self.collection.find_one({"_id": convert_to_object_id(attendee_id)})
+        return AttendeeOut(id=str(attendee["_id"]), **attendee)
+
     def get_attendees(self, event_id):
         res = []
         for attendee in self.collection.find({"event_id": event_id}):
