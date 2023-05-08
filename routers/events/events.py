@@ -75,7 +75,6 @@ async def create_event(
     users_driver.handle_nonexistent_user(user.id)
     return event_driver.create_new_event(event_models.EventDB(**event_in.dict(), creator_id=user.id))
 
-
 @router.get(
     "/id/{event_id}",
     summary="Get an event by id",

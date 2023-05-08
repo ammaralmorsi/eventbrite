@@ -55,8 +55,17 @@ async def add_order(event_id: str,
     ):
     event_driver.handle_nonexistent_event(event_id)
     users_driver.handle_nonexistent_user(order.user_id)
-    db_handler.add_order(event_id, order)
-    return PlainTextResponse("Order added successfully.", status_code=status.HTTP_200_OK)
+    return db_handler.add_order(event_id, order)
+
+@router.get(
+    "/order_id/{order_id}",
+    summary="Get order by order id",
+    description="This endpoint allows you to get order by order id.",
+)
+async def get_order(order_id: str):
+    db_handler.handle_nonexistent_order(order_id)
+    return db_handler.get_order(order_id)
+
 
 @router.get(
     "/user_id/{user_id}",
@@ -137,7 +146,14 @@ async def get_orders_by_event_id(event_id: str):
         },
     },
 )
-async def edit_order(order_id: str, updated_attributes):
+async def edit_order(order_id: str,
+    updated_attributes=Body(...,description="Order model",
+    example={
+    "first_name":"John",
+    "last_name":"Doe",
+    "email":"ahmed2@gmail.com",
+    })
+    ):
     db_handler.handle_nonexistent_order(order_id)
     db_handler.edit_order(order_id, updated_attributes)
     return PlainTextResponse("Order edited successfully.", status_code=status.HTTP_200_OK)

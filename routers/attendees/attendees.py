@@ -29,8 +29,8 @@ order_driver = OrderDriver()
                 "last_name":"Doe",
                 "email":"ahmed@gmail.com",
                 "type_of_reseved_ticket":"VIP",
-                "order_id":"jklbjgf8d",
-                "event_id":"sadgjh232",
+                "order_id":"64594a6ec8bd709f5881b8a8",
+                "event_id":"6459447df0c9d6f57d894a60",
                 "id":"sadgjh232",
             }
         },
@@ -46,15 +46,15 @@ async def add_attendee(event_id: str,
         "last_name":"Doe",
         "email":"ahmed@gmail.com",
         "type_of_reseved_ticket":"VIP",
-        "order_id":"jklbjgf8d",
-        "event_id":"sadgjh232",
+        "order_id":"64594a6ec8bd709f5881b8a8",
+        "event_id":"6459447df0c9d6f57d894a60",
     })
     ):
     event_driver.handle_nonexistent_event(event_id)
-    db_handler.add_attendee(event_id, attendee)
+    order_driver.handle_nonexistent_order(attendee.order_id)
     #update the count of order tickets
-    order_driver.update_order_tickets_count(attendee.order_id, 1)
-    return PlainTextResponse("Attendee added successfully.", status_code=status.HTTP_200_OK)
+    #order_driver.upate_tickets_count(attendee.order_id, 1)
+    return db_handler.add_attendee(event_id, attendee)
 
 @router.get(
     "/{event_id}/get_attendees",
@@ -68,8 +68,8 @@ async def add_attendee(event_id: str,
                 "last_name":"Doe",
                 "email":"ahmed@gmail.com",
                 "type_of_reseved_ticket":"VIP",
-                "order_id":"jklbjgf8d",
-                "event_id":"sadgjh232",
+                "order_id":"64594a6ec8bd709f5881b8a8",
+                "event_id":"6459447df0c9d6f57d894a60",
                 "id":"sadgjh232",
             }
         },
@@ -80,8 +80,7 @@ async def add_attendee(event_id: str,
 )
 async def get_attendees(event_id: str):
     event_driver.handle_nonexistent_event(event_id)
-    db_handler.get_attendees(event_id)
-    return PlainTextResponse("Attendees retrieved successfully.", status_code=status.HTTP_200_OK)
+    return db_handler.get_attendees(event_id)
 
 @router.get(
     "/order/{order_id}",
@@ -95,8 +94,8 @@ async def get_attendees(event_id: str):
                 "last_name":"Doe",
                 "email":"ahmed@gmail.com",
                 "type_of_reseved_ticket":"VIP",
-                "order_id":"jklbjgf8d",
-                "event_id":"sadgjh232",
+                "order_id":"64594a6ec8bd709f5881b8a8",
+                "event_id":"6459447df0c9d6f57d894a60",
                 "id":"sadgjh232",
             }
         },
@@ -122,9 +121,9 @@ async def get_attendees_by_order_id(order_id: str):
         },
     }
 )
-async def update_attendee(attendee_id: str, attendee: Attendee):
+async def update_attendee(attendee_id: str,updated_attributes ):
     db_handler.handle_nonexistent_attendee(attendee_id)
-    db_handler.update_attendee(attendee_id, attendee)
+    db_handler.update_attendee(attendee_id, updated_attributes)
     return PlainTextResponse("Attendee updated successfully.", status_code=status.HTTP_200_OK)
 
 @router.delete(
@@ -144,6 +143,6 @@ async def delete_attendee(attendee_id: str):
     db_handler.handle_nonexistent_attendee(attendee_id)
         #update the count of order tickets
     attendee = db_handler.get_attendee_by_id(attendee_id)
-    order_driver.update_order_tickets_count(attendee.order_id, -1)
+    #order_driver.upate_tickets_count(attendee.order_id, -1)
     db_handler.delete_attendee(attendee_id)
     return PlainTextResponse("Attendee deleted successfully.", status_code=status.HTTP_200_OK)

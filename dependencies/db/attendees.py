@@ -17,20 +17,20 @@ class AttendeeDriver:
             )
 
     def add_attendee(self, event_id:str, attendee: Attendee):
-        attendee["event_id"] = event_id
-        inserted_id=self.collection.insert_one(attendee).inserted_id
-        return AttendeeOut(id=str(inserted_id), **attendee)
+        attendee.event_id = event_id
+        inserted_id=self.collection.insert_one(attendee.dict()).inserted_id
+        return AttendeeOut(id=str(inserted_id), **attendee.dict())
 
-    def get_Attendees(self, event_id):
+    def get_attendees(self, event_id):
         res = []
         for attendee in self.collection.find({"event_id": event_id}):
-            res.append(attendee)
+            res.append(AttendeeOut(id=str(attendee["_id"]), **attendee))
         return res
 
-    def get_Attendees_by_order_id(self, order_id):
+    def get_attendees_by_order_id(self, order_id):
         res = []
         for attendee in self.collection.find({"order_id": order_id}):
-            res.append(attendee)
+            res.append(AttendeeOut(id=str(attendee["_id"]), **attendee))
         return res
 
     def update_attendee(self, attendee_id,updated_attributes):
@@ -41,3 +41,6 @@ class AttendeeDriver:
 
     def delete_attendee(self, attendee_id):
         self.collection.delete_one({"_id": convert_to_object_id(attendee_id)})
+
+    def attendees_count(self, order_id):
+        return self.collection.count_documents({"order_id": order_id})

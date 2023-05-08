@@ -37,11 +37,10 @@ user_id_type = Annotated[str, Field(
     example="2dg3f4g5h6j7k8l9",
 )]
 
-tickets_count_type = Optional[Annotated[int, Field(
-    gt=0,
+tickets_count_type = Annotated[int, Field(
     description="Number of tickets in the order (must be greater than 0)",
     example=2,
-)]]
+)]
 
 image_link_type = Annotated[str, Field(
     description="Image link of the event",
@@ -56,11 +55,12 @@ class Order(BaseModel):#orderin
     created_date: creation_date_type
     price: price_type
     user_id: user_id_type
-    tickets_count : tickets_count_type=0
     image_link: image_link_type
 
 class OrderOut(Order):
-        id: Annotated[str, Field(
+    id: Annotated[str, Field(
         description="Order ID",
         example="23dfbsdbf23",
     )]
+    tickets_count : tickets_count_type
+
