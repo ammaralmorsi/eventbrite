@@ -48,8 +48,8 @@ class EmailHandler:
         body = self.get_email_body(email_type, token)
         self.message.attach(MIMEText(body, "html"))
         try:
-            server = smtplib.SMTP("smtp.gmail.com", 587)
-            server.starttls()
+            server = smtplib.SMTP_SSL("smtp.gmail.com", 465)
+            # server.starttls()
             server.login(self.source_email, self.source_password)
             server.sendmail(self.source_email, email, self.message.as_string())
         except smtplib.SMTPRecipientsRefused:
