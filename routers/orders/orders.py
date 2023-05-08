@@ -73,11 +73,11 @@ async def get_order(order_id: str):
     responses={
         status.HTTP_200_OK: {
             "description": "Orders retrieved successfully.",
-            "content": {
-                    "first_name":"John",
-                    "last_name":"Doe",
-                    "email":"ahmed@gmail.com",
-                    "event_id":"6459447df0c9d6f57d894a60",
+            "content": [{
+                    "first_name":"hanan",
+                    "last_name":"fahme",
+                    "email":"hanan@go.com",
+                    "event_id":"6459447df0c9d6f57d894a20",
                     "created_date":"2021-08-12T12:00:00.000Z",
                     "price":100,
                     "user_id":"64594543f0c9d6f57d894a68",
@@ -85,11 +85,36 @@ async def get_order(order_id: str):
                     "image_link":"https://www.example.com/image.png",
                     "id":"jhv868753v5y3u74t"
                     },
+                    {
+                    "first_name":"hanan",
+                    "last_name":"fahme",
+                    "email":"hanan@go.com",
+                    "event_id":"6459447df0c9d6f57d894a42",
+                    "created_date":"2021-08-12T12:00:00.000Z",
+                    "price":100,
+                    "user_id":"64594543f0c9d6f57d894a68",
+                    "tickets_count":1,
+                    "image_link":"https://www.example.com/image.png",
+                    "id":"jhv868753v5y3u74t"
+                    },
+                    {
+                    "first_name":"hanan",
+                    "last_name":"fahme",
+                    "email":"hanan@go.com",
+                    "event_id":"6459447df0c9d6f57d894a11",
+                    "created_date":"2021-08-12T12:00:00.000Z",
+                    "price":100,
+                    "user_id":"64594543f0c9d6f57d894a68",
+                    "tickets_count":1,
+                    "image_link":"https://www.example.com/image.png",
+                    "id":"jhv868753v5y3u74t"
+                    },
+                ]
+        },
         status.HTTP_404_NOT_FOUND: {
             "description": "User not found.",
         },
     },
-    }
 )
 async def get_orders_by_user_id(user_id: str):
     users_driver.handle_nonexistent_user(user_id)
@@ -109,6 +134,30 @@ async def get_orders_by_user_id(user_id: str):
                             "first_name":"John",
                             "last_name":"Doe",
                             "email":"ahmed@gamil.com",
+                            "event_id":"6459447df0c9d6f57d894a60",
+                            "created_date":"2021-08-12T12:00:00.000Z",
+                            "price":100,
+                            "user_id":"64594543f0c9d6f57d894a62",
+                            "tickets_count":1,
+                            "image_link":"https://www.example.com/image.png",
+                            "id":"jhv868753v5y3u74t"
+                        },
+                        {
+                            "first_name":"John",
+                            "last_name":"Doe",
+                            "email":"saad@hi.com",
+                            "event_id":"6459447df0c9d6f57d894a60",
+                            "created_date":"2021-08-12T12:00:00.000Z",
+                            "price":100,
+                            "user_id":"64594543f0c9d6f57d894a64",
+                            "tickets_count":1,
+                            "image_link":"https://www.example.com/image.png",
+                            "id":"jhv868753v5y3u74t"
+                        },
+                        {
+                            "first_name":"hana",
+                            "last_name":"gamal",
+                            "email":"hana@hi.com",
                             "event_id":"6459447df0c9d6f57d894a60",
                             "created_date":"2021-08-12T12:00:00.000Z",
                             "price":100,

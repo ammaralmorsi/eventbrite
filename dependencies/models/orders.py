@@ -27,7 +27,6 @@ creation_date_type = Annotated[datetime, Field(
 )]
 
 price_type = Annotated[int, Field(
-        gt=0,
         description="Price of the order (must be greater than 0)",
         example=50,
 )]

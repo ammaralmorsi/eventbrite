@@ -94,7 +94,7 @@ async def get_attendee(attendee_id: str):
     responses={
         status.HTTP_200_OK: {
             "description":"Attendees retrieved successfully",
-            "content": {
+            "content": [{
                 "first_name":"John",
                 "last_name":"Doe",
                 "email":"ahmed@gmail.com",
@@ -102,7 +102,26 @@ async def get_attendee(attendee_id: str):
                 "order_id":"64594a6ec8bd709f5881b8a8",
                 "event_id":"6459447df0c9d6f57d894a60",
                 "id":"sadgjh232",
+            },
+            {
+                "first_name":"John",
+                "last_name":"Doe",
+                "email":"go@go.com",
+                "type_of_reseved_ticket":"VIP",
+                "order_id":"64594a6ec8bd709f5881b8a8",
+                "event_id":"6459447df0c9d6f57d894a60",
+                "id":"sadgjh2343",
+            },
+            {
+                "first_name":"John",
+                "last_name":"Doe",
+                "email":"hi@hi.com",
+                "type_of_reseved_ticket":"VIP",
+                "order_id":"64594a6ec8bd709f5881b8a8",
+                "event_id":"6459447df0c9d6f57d894a60",
+                "id":"sadgjh235",
             }
+            ]
         },
         status.HTTP_404_NOT_FOUND: {
             "description": "Event not found.",
@@ -120,7 +139,7 @@ async def get_attendees(event_id: str):
     responses={
         status.HTTP_200_OK: {
             "description":"Attendees retrieved successfully",
-            "content": {
+            "content": [{
                 "first_name":"John",
                 "last_name":"Doe",
                 "email":"ahmed@gmail.com",
@@ -128,7 +147,26 @@ async def get_attendees(event_id: str):
                 "order_id":"64594a6ec8bd709f5881b8a8",
                 "event_id":"6459447df0c9d6f57d894a60",
                 "id":"sadgjh232",
+            },
+            {
+                "first_name":"asad",
+                "last_name":"Doe",
+                "email":"go@go.com",
+                "type_of_reseved_ticket":"VIP",
+                "order_id":"64594a6ec8bd709f5881b8a8",
+                "event_id":"6459447df0c9d6f57d894a60",
+                "id":"sadgjh2343",
+            },
+            {
+                "first_name":"mona",
+                "last_name":"Doe",
+                "email":"hi@hi.com",
+                "type_of_reseved_ticket":"VIP",
+                "order_id":"64594a6ec8bd709f5881b8a8",
+                "event_id":"6459447df0c9d6f57d894a60",
+                "id":"sadgjh235",
             }
+            ]
         },
         status.HTTP_404_NOT_FOUND: {
             "description": "Order not found.",
