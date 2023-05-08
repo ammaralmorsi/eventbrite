@@ -30,7 +30,7 @@ class PromocodeDriver:
     def get_promocode_by_id(self, promocode_id: str) -> PromocodeOut:
         return PromocodeOut(id=promocode_id, **self.collection.find_one({"_id": ObjectId(promocode_id)}))
 
-    def create_promocodes(self, event_id,promocodes: list[PromoCode]):
+    def create_promocodes(self, event_id, promocodes: list[PromoCode]):
         promocodes = [
             PromocodeDB(
                 event_id=event_id, **promocode.dict()
