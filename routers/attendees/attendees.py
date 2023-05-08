@@ -6,6 +6,11 @@ from dependencies.db.users import UsersDriver
 from dependencies.db.attendees import AttendeeDriver
 from dependencies.db.events import EventDriver
 from dependencies.db.orders import OrderDriver
+#token
+from dependencies.token_handler import TokenHandler
+from fastapi.security import OAuth2PasswordBearer
+from fastapi import Depends
+
 
 router = APIRouter(
     prefix="/attendees",
@@ -121,7 +126,7 @@ async def get_attendees_by_order_id(order_id: str):
         },
     }
 )
-async def update_attendee(attendee_id: str,updated_attributes ):
+async def update_attendee(attendee_id: str,updated_attributes=Body(...,description="Attendee model" )):
     db_handler.handle_nonexistent_attendee(attendee_id)
     db_handler.update_attendee(attendee_id, updated_attributes)
     return PlainTextResponse("Attendee updated successfully.", status_code=status.HTTP_200_OK)
@@ -142,7 +147,6 @@ async def update_attendee(attendee_id: str,updated_attributes ):
 async def delete_attendee(attendee_id: str):
     db_handler.handle_nonexistent_attendee(attendee_id)
         #update the count of order tickets
-    attendee = db_handler.get_attendee_by_id(attendee_id)
     #order_driver.upate_tickets_count(attendee.order_id, -1)
     db_handler.delete_attendee(attendee_id)
     return PlainTextResponse("Attendee deleted successfully.", status_code=status.HTTP_200_OK)
