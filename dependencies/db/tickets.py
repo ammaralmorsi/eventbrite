@@ -34,6 +34,17 @@ class TicketDriver:
                 return True
         return False
 
+    def get_minimum_price(self, event_id):
+        tickets = self.collection.find({"event_id": event_id})
+        if tickets:
+            minimum_price = tickets[0]["price"]
+        else:
+            return -1
+        for ticket in tickets:
+            if ticket["price"] < minimum_price:
+                minimum_price = ticket["price"]
+        return minimum_price
+
     def is_valid_event_id(self, event_id):
         return self.db["events"].count_documents({"_id": convert_to_object_id(event_id)}) > 0
 
