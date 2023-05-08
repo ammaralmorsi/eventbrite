@@ -44,9 +44,12 @@ class EmailHandler:
             else self.generate_html_for_forgot_password(token)
 
     def send_email(self, email: str, token: str, email_type: EmailType):
-        self.message["To"] = email
+        message = MIMEMultipart()
+        message["From"] = self.source_email
+        message["To"] = email
+        message["Subject"] = "Verification email"
         body = self.get_email_body(email_type, token)
-        self.message.attach(MIMEText(body, "html"))
+        message.attach(MIMEText(body, "html"))
         try:
             server = smtplib.SMTP_SSL("smtp.gmail.com", 465)
             # server.starttls()
