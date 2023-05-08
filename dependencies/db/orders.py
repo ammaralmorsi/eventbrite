@@ -31,8 +31,8 @@ class OrderDriver:
         order.event_id = event_id
         self.collection.insert_one(order.dict())
 
-    def edit_order(self, order_id, order):
-        self.collection.update_one({"_id": convert_to_object_id(order_id)}, {"$set": order.dict()})
+    def edit_order(self, order_id, updated_attributes):
+        self.collection.update_one({"_id": convert_to_object_id(order_id)}, {"$set": updated_attributes})
 
     def delete_order(self, order_id):
         self.collection.delete_one({"_id": convert_to_object_id(order_id)})

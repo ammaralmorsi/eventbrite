@@ -1,9 +1,9 @@
 from fastapi.responses import PlainTextResponse
 from typing import List, Annotated
 from fastapi import APIRouter, HTTPException, status, Body
-from dependencies.models.attendees import Attendees, AttendeesOut
+from dependencies.models.attendees import Attendee, AttendeeOut
 from dependencies.db.users import UsersDriver
-from dependencies.db.attendees import AttendeesDriver
+from dependencies.db.attendees import AttendeeDriver
 from dependencies.db.events import EventDriver
 from dependencies.db.orders import OrderDriver
 
@@ -12,7 +12,7 @@ router = APIRouter(
     tags=["attendees"],
 )
 
-db_handler = AttendeesDriver()
+db_handler = AttendeeDriver()
 users_driver = UsersDriver()
 event_driver = EventDriver()
 order_driver = OrderDriver()
@@ -31,7 +31,7 @@ order_driver = OrderDriver()
     },
 )
 async def add_attendee(event_id: str,
-    attendee: Attendees = Body(...,description="Attendee model",
+    attendee: Attendee = Body(...,description="Attendee model",
     example={
         "first_name":"John",
         "last_name":"Doe",
@@ -112,7 +112,7 @@ async def get_attendees_by_order_id(order_id: str):
         },
     }
 )
-async def update_attendee(attendee_id: str, attendee: Attendees):
+async def update_attendee(attendee_id: str, attendee: Attendee):
     db_handler.handle_nonexistent_attendee(attendee_id)
     db_handler.update_attendee(attendee_id, attendee)
     return PlainTextResponse("Attendee updated successfully.", status_code=status.HTTP_200_OK)

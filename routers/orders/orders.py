@@ -39,9 +39,11 @@ async def add_order(event_id: str,
     "created_date":"2021-08-12T12:00:00.000Z",
     "price":100,
     "user_id":"sadgjh232",
+    "image_link":"https://www.example.com/image.png"
     })
     ):
     event_driver.handle_nonexistent_event(event_id)
+    users_driver.handle_nonexistent_user(order.user_id)
     db_handler.add_order(event_id, order)
     return PlainTextResponse("Order added successfully.", status_code=status.HTTP_200_OK)
 
@@ -53,7 +55,6 @@ async def add_order(event_id: str,
         status.HTTP_200_OK: {
             "description": "Orders retrieved successfully.",
             "content": {
-                    "order_id":"sadgjh232",
                     "first_name":"John",
                     "last_name":"Doe",
                     "email":"ahmed@gmail.com",
@@ -62,6 +63,8 @@ async def add_order(event_id: str,
                     "price":100,
                     "user_id":"sadgjh232",
                     "tickets_count":1,
+                    "image_link":"https://www.example.com/image.png",
+                    "id":"jhv868753v5y3u74t"
                     },
         status.HTTP_404_NOT_FOUND: {
             "description": "User not found.",
@@ -105,7 +108,7 @@ async def get_orders_by_event_id(event_id: str):
         },
     },
 )
-async def edit_order(order_id: str, order: Order = Body(...)):
+async def edit_order(order_id: str, updated_attributes):
     db_handler.handle_nonexistent_order(order_id)
-    db_handler.edit_order(order_id, order)
+    db_handler.edit_order(order_id, updated_attributes)
     return PlainTextResponse("Order edited successfully.", status_code=status.HTTP_200_OK)

@@ -43,6 +43,10 @@ tickets_count_type = Annotated[int, Field(
     example=2,
 )]
 
+image_link_type = Annotated[str, Field(
+    description="Image link of the event",
+    example="https://www.example.com/image.png",
+)]
 
 class Order(BaseModel):#orderin
     first_name: name_type
@@ -53,6 +57,7 @@ class Order(BaseModel):#orderin
     price: price_type
     user_id: user_id_type
     tickets_count : tickets_count_type=0
+    image_link: image_link_type
 
 class OrderOut(Order):
         id: Annotated[str, Field(

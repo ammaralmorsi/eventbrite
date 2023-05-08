@@ -30,7 +30,7 @@ event_id_type = Annotated[str, Field(
     description="Event id in db",
     example="234jhg2hf434j",
 )]
-class Attendees(BaseModel):
+class Attendee(BaseModel):
     first_name: name_type
     last_name: name_type
     email: email_type
@@ -38,7 +38,7 @@ class Attendees(BaseModel):
     order_id:order_id_type=None
     event_id:event_id_type
 
-class AttendeesOut(Attendees):
+class AttendeeOut(Attendee):
         id: Annotated[str, Field(
         description="Order ID",
         example="23dfbsdbf23",
