@@ -143,6 +143,14 @@ class EventDB(BaseModel):
 
 class EventOut(EventDB):
     id: id_type
+    price: Annotated[int, Field(
+        description="Price of the event",
+        example=100,
+    )]
+    is_free: Annotated[bool, Field(
+        description="Whether the event is free or not",
+        example=False,
+    )]
 
 
 class EventCard(BaseModel):
