@@ -75,7 +75,7 @@ class UsersDriver:
     def get_user_by_id(self, user_id: str) -> users.UserInfo:
         self.handle_nonexistent_user(user_id)
         try:
-            return users.UserInfo(**self.collection.find_one({"_id": convert_to_object_id(user_id)}))
+            return users.UserInfo(id=user_id, **self.collection.find_one({"_id": convert_to_object_id(user_id)}))
         except mongo_errors.PyMongoError:
             raise HTTPException(detail="database error", status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
