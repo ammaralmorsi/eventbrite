@@ -53,8 +53,3 @@ class OrderDriver:
     #     order = self.collection.find_one({"_id": convert_to_object_id(order_id)})
     #     tickets_count = order["tickets_count"] + increment
     #     self.collection.update_one({"_id": convert_to_object_id(order_id)}, {"$set": {"tickets_count": tickets_count}})
-
-
-
-
-
