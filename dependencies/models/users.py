@@ -56,6 +56,7 @@ class UserInSignup(BaseModel):
 
 
 class UserInfo(BaseModel):
+    id: user_id_type
     email: email_type
     firstname: firstname_type
     lastname: lastname_type

@@ -45,9 +45,9 @@ def check_quantity(ticket_id, quantity):
 async def create_tickets_by_event_id(event_id: str, tickets: List[TicketIn]):
     if not db_handler.is_valid_event_id(event_id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
-
-    if db_handler.create_tickets(event_id, tickets):
-        return PlainTextResponse("Tickets created successfully", status_code=200)
+    inserted = db_handler.create_tickets(event_id, tickets)
+    if inserted:
+        return inserted
     else:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Error creating tickets")
 

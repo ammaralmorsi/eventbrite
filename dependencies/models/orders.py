@@ -33,7 +33,7 @@ price_type = Annotated[int, Field(
 )]
 
 user_id_type = Annotated[str, Field(
-    description="user ID in db",
+    description="user ID(owner) in db",
     example="2dg3f4g5h6j7k8l9",
 )]
 

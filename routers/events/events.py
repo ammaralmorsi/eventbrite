@@ -11,6 +11,8 @@ from fastapi.security import OAuth2PasswordBearer
 from dependencies.db.events import EventDriver
 from dependencies.db.likes import LikesDriver
 from dependencies.db.users import UsersDriver
+from dependencies.db.tickets import TicketDriver
+from dependencies.db.promocodes import PromocodeDriver
 import dependencies.models.users as user_models
 import dependencies.models.events as event_models
 from dependencies.token_handler import TokenHandler
@@ -25,6 +27,8 @@ event_driver = EventDriver()
 users_driver = UsersDriver()
 likes_driver = LikesDriver()
 token_handler = TokenHandler()
+ticket_driver = TicketDriver()
+promocode_driver = PromocodeDriver()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 
@@ -73,7 +77,12 @@ async def create_event(
     user: user_models.UserToken = token_handler.get_user(token)
 
     users_driver.handle_nonexistent_user(user.id)
-    return event_driver.create_new_event(event_models.EventDB(**event_in.dict(), creator_id=user.id))
+    event_out = event_driver.create_new_event(event_models.EventDB(**event_in.dict(), creator_id=user.id))
+    if event_in.tickets:
+        ticket_driver.create_tickets(event_out.id, event_in.tickets)
+    if event_in.promocodes:
+        promocode_driver.create_promocodes(event_out.id, event_in.promocodes)
+    return event_out
 
 @router.get(
     "/id/{event_id}",
@@ -126,6 +135,7 @@ async def create_event(
 async def get_event(
         event_id: str
 ) -> event_models.EventOut:
+    event_driver.handle_nonexistent_event(event_id)
     return event_driver.get_event_by_id(event_id)
 
 
@@ -170,11 +180,14 @@ async def delete_event(
     user = token_handler.get_user(token)
 
     users_driver.handle_nonexistent_user(user.id)
+    event_driver.handle_nonexistent_event(event_id)
 
     event: event_models.EventOut = event_driver.get_event_by_id(event_id)
     if event.creator_id != user.id:
         raise HTTPException(detail="user is not the creator", status_code=status.HTTP_401_UNAUTHORIZED)
 
+    ticket_driver.delete_tickets_by_event_id(event_id)
+    promocode_driver.delete_promocodes_by_event_id(event_id)
     likes_driver.delete_likes_by_event_id(event_id)
     event_driver.delete_event_by_id(event_id)
     return PlainTextResponse("Event deleted successfully", status_code=200)
@@ -183,10 +196,45 @@ async def delete_event(
 @router.get(
     "/search",
     summary="Search for events",
+    responses={
+        status.HTTP_200_OK: {
+            "description": "events found",
+            "content": {
+                "creator_id": "2dg3f4g5h6j7k8l9",
+                "basic_info": {
+                    "title": "Let's be loyal",
+                    "organizer": "Loyalty Organization",
+                    "category": "Loyalty",
+                    "sub_category": "Loyalty"
+                },
+                "image_link": "https://www.example.com/image.png",
+                "summary": "This is a summary of the event",
+                "description": "This is a description of the event",
+                "state": {
+                    "is_public": True,
+                    "publish_date_time": "2023-05-01T09:00:00"
+                },
+                "date_and_time": {
+                    "start_date_time": "2023-05-01T15:30:00",
+                    "end_date_time": "2023-05-01T18:30:00",
+                    "is_display_start_date": True,
+                    "is_display_end_date": True,
+                    "time_zone": "US/Pacific",
+                    "event_page_language": "en-US"
+                },
+                "location": {
+                    "type": "venue",
+                    "location": "123 Main St, San Francisco, CA 94111"
+                },
+                "id": "2dg3f4g5h6j7k8l9"
+            }
+        },
+    }
 )
 async def search_events(
         city: str,
         online: Optional[bool] = None,
+        free: Optional[bool] = None,
         title: Optional[str] = None,
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None,
@@ -195,6 +243,7 @@ async def search_events(
     return event_driver.search_events(
         city,
         online,
+        free,
         title,
         start_date,
         end_date,

@@ -1,7 +1,7 @@
 from fastapi.responses import PlainTextResponse
 from typing import List, Annotated
 from fastapi import APIRouter, HTTPException, status, Body
-from dependencies.models.orders import Order, OrderOut
+from dependencies.models.orders import Order, OrderOut, OrderDB, Attendee
 from dependencies.db.users import UsersDriver
 from dependencies.db.orders import OrderDriver
 from dependencies.db.events import EventDriver
@@ -52,7 +52,7 @@ async def add_order(event_id: str,
     "user_id":"64594543f0c9d6f57d894a68",
     "image_link":"https://www.example.com/image.png"
     })
-    ):
+)->OrderOut:
     event_driver.handle_nonexistent_event(event_id)
     users_driver.handle_nonexistent_user(order.user_id)
     return db_handler.add_order(event_id, order)
@@ -65,7 +65,6 @@ async def add_order(event_id: str,
 async def get_order(order_id: str):
     db_handler.handle_nonexistent_order(order_id)
     return db_handler.get_order(order_id)
-
 
 @router.get(
     "/user_id/{user_id}",
@@ -96,14 +95,12 @@ async def get_orders_by_user_id(user_id: str):
     users_driver.handle_nonexistent_user(user_id)
     return db_handler.get_user_orders(user_id)
 
-
 @router.get(
     "/event_id/{event_id}",
     summary="Get orders by event id",
     description="This endpoint allows you to get orders by event id.",
     responses={
         status.HTTP_200_OK: {
-            "model": List[OrderOut],
             "description": "Orders retrieved successfully.",
             "content": {
                 "application/json": {
@@ -139,7 +136,7 @@ async def get_orders_by_event_id(event_id: str):
     description="This endpoint allows you to edit order.",
     responses={
         status.HTTP_200_OK: {
-            "description": "Order edited successfully.",
+            "description": "Orders retrieved successfully.",
         },
         status.HTTP_404_NOT_FOUND: {
             "description": "Order not found.",

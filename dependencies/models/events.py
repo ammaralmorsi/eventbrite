@@ -4,7 +4,8 @@ from datetime import datetime
 from pydantic import BaseModel
 from pydantic import Field
 
-from dependencies.models.tickets import TicketIn, TicketOut
+from dependencies.models.tickets import TicketIn
+from dependencies.models.promocodes import PromoCode
 
 
 class BasicInfo(BaseModel):
@@ -104,6 +105,9 @@ location_type = Annotated[Location, Field(
 tickets_type = Annotated[list[TicketIn], Field(
     description="Tickets of the event",
 )]
+promocodes_type = Annotated[list[PromoCode], Field(
+    description="Promocodes of the event",
+)]
 id_type = Annotated[str, Field(
     description="ID in db",
     example="2dg3f4g5h6j7k8l9",
@@ -123,6 +127,7 @@ class CreateEventIn(BaseModel):
     date_and_time: date_and_time_type
     location: location_type
     tickets: tickets_type
+    promocodes: promocodes_type
 
 
 class EventDB(BaseModel):
@@ -138,6 +143,14 @@ class EventDB(BaseModel):
 
 class EventOut(EventDB):
     id: id_type
+    price: Annotated[int, Field(
+        description="Price of the event",
+        example=100,
+    )]
+    is_free: Annotated[bool, Field(
+        description="Whether the event is free or not",
+        example=False,
+    )]
 
 
 class EventCard(BaseModel):

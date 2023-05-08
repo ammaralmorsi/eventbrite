@@ -20,9 +20,7 @@ class EmailHandler:
     def __init__(self):
         self.source_email = os.environ.get("EVENTBRITE_EMAIL")
         self.source_password = os.environ.get("EVENTBRITE_PASSWORD")
-        self.message = MIMEMultipart()
-        self.message["From"] = os.environ.get("EMAIL")
-        self.message["Subject"] = "Verification email"
+        self.message = None
         self.expiration_date = datetime.utcnow() + timedelta(hours=24)
 
     def generate_html_for_signup_verification(self, token):
@@ -44,12 +42,15 @@ class EmailHandler:
             else self.generate_html_for_forgot_password(token)
 
     def send_email(self, email: str, token: str, email_type: EmailType):
+        self.message = MIMEMultipart()
+        self.message["From"] = self.source_email
         self.message["To"] = email
+        self.message["Subject"] = "Verification email"
         body = self.get_email_body(email_type, token)
         self.message.attach(MIMEText(body, "html"))
         try:
-            server = smtplib.SMTP("smtp.gmail.com", 587)
-            server.starttls()
+            server = smtplib.SMTP_SSL("smtp.gmail.com", 465)
+            # server.starttls()
             server.login(self.source_email, self.source_password)
             server.sendmail(self.source_email, email, self.message.as_string())
         except smtplib.SMTPRecipientsRefused:
