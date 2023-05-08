@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated,Optional
 from datetime import datetime
 
 from pydantic import BaseModel
@@ -37,11 +37,11 @@ user_id_type = Annotated[str, Field(
     example="2dg3f4g5h6j7k8l9",
 )]
 
-tickets_count_type = Annotated[int, Field(
+tickets_count_type = Optional[Annotated[int, Field(
     gt=0,
     description="Number of tickets in the order (must be greater than 0)",
     example=2,
-)]
+)]]
 
 image_link_type = Annotated[str, Field(
     description="Image link of the event",
@@ -53,7 +53,7 @@ class Order(BaseModel):#orderin
     last_name: name_type
     email: email_type
     event_id:event_id_type
-    creation_date: creation_date_type
+    created_date: creation_date_type
     price: price_type
     user_id: user_id_type
     tickets_count : tickets_count_type=0

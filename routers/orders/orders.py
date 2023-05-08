@@ -23,6 +23,17 @@ event_driver = EventDriver()
     responses={
         status.HTTP_200_OK: {
             "description": "Order added successfully.",
+            "content": {
+                    "first_name":"John",
+                    "last_name":"Doe",
+                    "email":"ahmed@gmail.com",
+                    "event_id":"sadgjh232",
+                    "created_date":"2021-08-12T12:00:00.000Z",
+                    "price":100,
+                    "user_id":"sadgjh232",
+                    "image_link":"https://www.example.com/image.png",
+                    "id":"jhv868753v5y3u74t"
+                    }
         },
         status.HTTP_404_NOT_FOUND: {
             "description": "Event not found.",
@@ -85,6 +96,24 @@ async def get_orders_by_user_id(user_id: str):
         status.HTTP_200_OK: {
             "model": List[OrderOut],
             "description": "Orders retrieved successfully.",
+            "content": {
+                "application/json": {
+                    "example": [
+                        {
+                            "first_name":"John",
+                            "last_name":"Doe",
+                            "email":"ahmed@gamil.com",
+                            "event_id":"sadgjh232",
+                            "created_date":"2021-08-12T12:00:00.000Z",
+                            "price":100,
+                            "user_id":"sadgjh232",
+                            "tickets_count":1,
+                            "image_link":"https://www.example.com/image.png",
+                            "id":"jhv868753v5y3u74t"
+                        }
+                    ]
+                }
+            },
         },
         status.HTTP_404_NOT_FOUND: {
             "description": "Event not found.",
@@ -112,3 +141,20 @@ async def edit_order(order_id: str, updated_attributes):
     db_handler.handle_nonexistent_order(order_id)
     db_handler.edit_order(order_id, updated_attributes)
     return PlainTextResponse("Order edited successfully.", status_code=status.HTTP_200_OK)
+
+@router.delete(
+    "/{order_id}/delete_order",
+    description="This endpoint allows you to delete order.",
+    responses={
+        status.HTTP_200_OK: {
+            "description": "Order deleted successfully.",
+        },
+        status.HTTP_404_NOT_FOUND: {
+            "description": "Order not found.",
+        },
+    },
+)
+async def delete_order(order_id: str):
+    db_handler.handle_nonexistent_order(order_id)
+    db_handler.delete_order(order_id)
+    return PlainTextResponse("Order deleted successfully.", status_code=status.HTTP_200_OK)

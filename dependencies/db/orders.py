@@ -27,9 +27,14 @@ class OrderDriver:
             res.append(order)
         return res
 
+    def get_order(self, order_id):
+        self.handle_nonexistent_order(order_id)
+        return self.collection.find_one({"_id": convert_to_object_id(order_id)})
+
     def add_order(self, event_id, order):
         order.event_id = event_id
-        self.collection.insert_one(order.dict())
+        inserted_id=self.collection.insert_one(order.dict()).inserted_id
+        return OrderOut(id=str(inserted_id), **order.dict())
 
     def edit_order(self, order_id, updated_attributes):
         self.collection.update_one({"_id": convert_to_object_id(order_id)}, {"$set": updated_attributes})

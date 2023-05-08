@@ -18,7 +18,8 @@ class AttendeeDriver:
 
     def add_attendee(self, event_id:str, attendee: Attendee):
         attendee["event_id"] = event_id
-        self.collection.insert_one(attendee)
+        inserted_id=self.collection.insert_one(attendee).inserted_id
+        return AttendeeOut(id=str(inserted_id), **attendee)
 
     def get_Attendees(self, event_id):
         res = []

@@ -24,6 +24,15 @@ order_driver = OrderDriver()
     responses={
         status.HTTP_200_OK: {
             "description":"Attendee added successfully.",
+            "content": {
+                "first_name":"John",
+                "last_name":"Doe",
+                "email":"ahmed@gmail.com",
+                "type_of_reseved_ticket":"VIP",
+                "order_id":"jklbjgf8d",
+                "event_id":"sadgjh232",
+                "id":"sadgjh232",
+            }
         },
         status.HTTP_404_NOT_FOUND: {
             "description": "Event not found.",
@@ -55,13 +64,13 @@ async def add_attendee(event_id: str,
         status.HTTP_200_OK: {
             "description":"Attendees retrieved successfully",
             "content": {
-                "id":"sadgjh232",
                 "first_name":"John",
                 "last_name":"Doe",
                 "email":"ahmed@gmail.com",
                 "type_of_reseved_ticket":"VIP",
                 "order_id":"jklbjgf8d",
                 "event_id":"sadgjh232",
+                "id":"sadgjh232",
             }
         },
         status.HTTP_404_NOT_FOUND: {
@@ -82,13 +91,13 @@ async def get_attendees(event_id: str):
         status.HTTP_200_OK: {
             "description":"Attendees retrieved successfully",
             "content": {
-                "id":"sadgjh232",
                 "first_name":"John",
                 "last_name":"Doe",
                 "email":"ahmed@gmail.com",
                 "type_of_reseved_ticket":"VIP",
                 "order_id":"jklbjgf8d",
                 "event_id":"sadgjh232",
+                "id":"sadgjh232",
             }
         },
         status.HTTP_404_NOT_FOUND: {
@@ -97,6 +106,7 @@ async def get_attendees(event_id: str):
     }
 )
 async def get_attendees_by_order_id(order_id: str):
+    order_driver.handle_nonexistent_order(order_id)
     return db_handler.get_attendees_by_order_id(order_id)
 
 @router.put(
