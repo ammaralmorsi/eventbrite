@@ -62,7 +62,7 @@ async def add_order(event_id: str,
     summary="Get order by order id",
     description="This endpoint allows you to get order by order id.",
 )
-async def get_order(order_id: str):
+async def get_order(order_id: str)->OrderOut:
     db_handler.handle_nonexistent_order(order_id)
     return db_handler.get_order(order_id)
 
@@ -116,7 +116,7 @@ async def get_order(order_id: str):
         },
     },
 )
-async def get_orders_by_user_id(user_id: str):
+async def get_orders_by_user_id(user_id: str)->List[OrderOut]:
     users_driver.handle_nonexistent_user(user_id)
     return db_handler.get_user_orders(user_id)
 
@@ -175,7 +175,7 @@ async def get_orders_by_user_id(user_id: str):
         },
     },
 )
-async def get_orders_by_event_id(event_id: str):
+async def get_orders_by_event_id(event_id: str)->List[OrderOut]:
     event_driver.handle_nonexistent_event(event_id)
     return db_handler.get_event_orders(event_id)
 

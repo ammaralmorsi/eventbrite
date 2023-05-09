@@ -54,7 +54,7 @@ async def add_attendee(event_id: str,
         "order_id":"64594a6ec8bd709f5881b8a8",
         "event_id":"6459447df0c9d6f57d894a60",
     })
-    ):
+    )->AttendeeOut:
     event_driver.handle_nonexistent_event(event_id)
     order_driver.handle_nonexistent_order(attendee.order_id)
     #update the count of order tickets
@@ -83,7 +83,7 @@ async def add_attendee(event_id: str,
         }
     }
 )
-async def get_attendee(attendee_id: str):
+async def get_attendee(attendee_id: str)->AttendeeOut:
     db_handler.handle_nonexistent_attendee(attendee_id)
     return db_handler.get_attendee(attendee_id)
 
@@ -99,7 +99,7 @@ async def get_attendee(attendee_id: str):
                 "last_name":"Doe",
                 "email":"ahmed@gmail.com",
                 "type_of_reseved_ticket":"VIP",
-                "order_id":"64594a6ec8bd709f5881b8a8",
+                "order_id":"64594a6ec8bd709f5881b811",
                 "event_id":"6459447df0c9d6f57d894a60",
                 "id":"sadgjh232",
             },
@@ -108,7 +108,7 @@ async def get_attendee(attendee_id: str):
                 "last_name":"Doe",
                 "email":"go@go.com",
                 "type_of_reseved_ticket":"VIP",
-                "order_id":"64594a6ec8bd709f5881b8a8",
+                "order_id":"64594a6ec8bd709f5881b8a2",
                 "event_id":"6459447df0c9d6f57d894a60",
                 "id":"sadgjh2343",
             },
@@ -117,7 +117,7 @@ async def get_attendee(attendee_id: str):
                 "last_name":"Doe",
                 "email":"hi@hi.com",
                 "type_of_reseved_ticket":"VIP",
-                "order_id":"64594a6ec8bd709f5881b8a8",
+                "order_id":"64594a6ec8bd709f5881b8a3",
                 "event_id":"6459447df0c9d6f57d894a60",
                 "id":"sadgjh235",
             }
@@ -128,7 +128,7 @@ async def get_attendee(attendee_id: str):
         },
     }
 )
-async def get_attendees(event_id: str):
+async def get_attendees(event_id: str)->List[AttendeeOut]:
     event_driver.handle_nonexistent_event(event_id)
     return db_handler.get_attendees(event_id)
 
@@ -154,7 +154,7 @@ async def get_attendees(event_id: str):
                 "email":"go@go.com",
                 "type_of_reseved_ticket":"VIP",
                 "order_id":"64594a6ec8bd709f5881b8a8",
-                "event_id":"6459447df0c9d6f57d894a60",
+                "event_id":"6459447df0c9d6f57d894a11",
                 "id":"sadgjh2343",
             },
             {
@@ -163,7 +163,7 @@ async def get_attendees(event_id: str):
                 "email":"hi@hi.com",
                 "type_of_reseved_ticket":"VIP",
                 "order_id":"64594a6ec8bd709f5881b8a8",
-                "event_id":"6459447df0c9d6f57d894a60",
+                "event_id":"6459447df0c9d6f57d894a68",
                 "id":"sadgjh235",
             }
             ]
@@ -173,7 +173,7 @@ async def get_attendees(event_id: str):
         },
     }
 )
-async def get_attendees_by_order_id(order_id: str):
+async def get_attendees_by_order_id(order_id: str)->List[AttendeeOut]:
     order_driver.handle_nonexistent_order(order_id)
     return db_handler.get_attendees_by_order_id(order_id)
 
