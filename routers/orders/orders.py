@@ -5,6 +5,11 @@ from dependencies.models.orders import Order, OrderOut
 from dependencies.db.users import UsersDriver
 from dependencies.db.orders import OrderDriver
 from dependencies.db.events import EventDriver
+#token
+from dependencies.token_handler import TokenHandler
+from fastapi.security import OAuth2PasswordBearer
+from dependencies.models.users import UserToken
+from fastapi import Depends
 
 router = APIRouter(
     prefix="/orders",
@@ -14,8 +19,9 @@ router = APIRouter(
 db_handler = OrderDriver()
 users_driver = UsersDriver()
 event_driver = EventDriver()
-
-
+#token
+token_handler = TokenHandler()
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 @router.post(
     "/{event_id}/add_order",
     summary="Add order to event",
@@ -30,7 +36,6 @@ event_driver = EventDriver()
                     "event_id":"6459447df0c9d6f57d894a60",
                     "created_date":"2021-08-12T12:00:00.000Z",
                     "price":100,
-                    "user_id":"64594543f0c9d6f57d894a68",
                     "image_link":"https://www.example.com/image.png",
                     "id":"jhv868753v5y3u74t"
                     }
@@ -41,6 +46,7 @@ event_driver = EventDriver()
     },
 )
 async def add_order(event_id: str,
+    token: Annotated[str, Depends(oauth2_scheme)],
     order: Order = Body(...,description="Order model",
     example={
     "first_name":"John",
@@ -54,6 +60,8 @@ async def add_order(event_id: str,
     })
 )->OrderOut:
     event_driver.handle_nonexistent_event(event_id)
+    user: UserToken = token_handler.get_user(token)
+    order.user_id = user.id
     users_driver.handle_nonexistent_user(order.user_id)
     return db_handler.add_order(event_id, order)
 

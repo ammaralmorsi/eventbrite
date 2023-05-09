@@ -46,6 +46,15 @@ image_link_type = Annotated[str, Field(
     example="https://www.example.com/image.png",
 )]
 
+# class OrderIn(BaseModel):#orderin
+#     first_name: name_type
+#     last_name: name_type
+#     email: email_type
+#     event_id:event_id_type
+#     created_date: creation_date_type
+#     price: price_type
+#     image_link: image_link_type
+
 class Order(BaseModel):#orderin
     first_name: name_type
     last_name: name_type
@@ -53,8 +62,9 @@ class Order(BaseModel):#orderin
     event_id:event_id_type
     created_date: creation_date_type
     price: price_type
-    user_id: user_id_type
+    user_id: user_id_type=0
     image_link: image_link_type
+
 
 class OrderOut(Order):
     id: Annotated[str, Field(
