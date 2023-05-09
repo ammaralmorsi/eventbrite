@@ -77,12 +77,17 @@ async def create_event(
     user: user_models.UserToken = token_handler.get_user(token)
 
     users_driver.handle_nonexistent_user(user.id)
-    event_out = event_driver.create_new_event(event_models.EventDB(**event_in.dict(), creator_id=user.id))
+    event_out_id = event_driver.create_new_event(event_models.EventDB(**event_in.dict(), creator_id=user.id))
     if event_in.tickets:
-        ticket_driver.create_tickets(event_out.id, event_in.tickets)
+        ticket_driver.create_tickets(event_out_id, event_in.tickets)
     if event_in.promocodes:
-        promocode_driver.create_promocodes(event_out.id, event_in.promocodes)
-    return event_out
+        promocode_driver.create_promocodes(event_out_id, event_in.promocodes)
+    return event_models.EventOut(
+        price=ticket_driver.get_minimum_price(event_out_id),
+        is_free=ticket_driver.is_free_event(event_out_id),
+        id=event_out_id,
+        **event_in.dict(),
+    )
 
 @router.get(
     "/id/{event_id}",
