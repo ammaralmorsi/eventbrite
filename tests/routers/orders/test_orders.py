@@ -96,3 +96,21 @@ def test_update_order():
 
     response = client.put(f"/orders/{correct_order_id}/edit_order",json={"first_name":"John"},headers={"Authorization": f"Bearer {token}"})
     assert response.status_code == 200
+
+def test_update_order_with_wrong_order_id():
+    user_email = correct_email
+    user_id = get_user_id(user_email)
+    user = UserToken(email=user_email, id=user_id)
+    token = token_handler.encode_token(user)
+
+    response = client.put(f"/orders/{incorrect_order_id}/edit_order",json={"first_name":"John"},headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 404
+
+def test_delete_order():
+    user_email = correct_email
+    user_id = get_user_id(user_email)
+    user = UserToken(email=user_email, id=user_id)
+    token = token_handler.encode_token(user)
+
+    response = client.delete(f"/orders/{correct_order_id}/delete_order",headers={"Authorization": f"Bearer {token}"})
+    assert response.status_code == 200
