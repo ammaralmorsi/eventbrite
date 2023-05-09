@@ -241,5 +241,6 @@ async def delete_attendee(attendee_id: str,
     db_handler.handle_nonexistent_attendee(attendee_id)
         #update the count of order tickets
     #order_driver.upate_tickets_count(attendee.order_id, -1)
+    #delete
     db_handler.delete_attendee(attendee_id)
     return PlainTextResponse("Attendee deleted successfully.", status_code=status.HTTP_200_OK)
