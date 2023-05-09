@@ -23,6 +23,20 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 
 def check_quantity(ticket_id, quantity):
+    """
+    Helper function that checks if there are enough tickets available to fulfill a given quantity.
+
+    Args:
+        ticket_id: A string representing the ID of the ticket to check.
+        quantity: An integer representing the number of tickets to check.
+
+    Raises:
+        HTTPException: If there aren't enough tickets available to fulfill the given quantity.
+
+    Returns:
+        A boolean value indicating whether there are enough tickets available to fulfill the given quantity.
+    """
+
     ticket = db_handler.get_ticket_by_id(ticket_id)
     if quantity < 0:
         if ticket.available_quantity + quantity < 0:
@@ -53,6 +67,20 @@ def check_quantity(ticket_id, quantity):
 )
 async def create_tickets_by_event_id(event_id: str,
                                      tickets: List[TicketIn], token: Annotated[str, Depends(oauth2_scheme)]):
+    """
+    API endpoint to create tickets for a given event id.
+
+    Args:
+        event_id (str): A string representing the ID of the event to create tickets for.
+        tickets (List[TicketIn]): A list of TicketIn objects representing the tickets to create.
+        token (str): A string representing the authentication token.
+
+    Raises:
+        HTTPException: If the event ID is invalid or there's an error creating the tickets.
+
+    Returns:
+        Any: The newly created tickets.
+    """
     user: UserToken = token_handler.get_user(token)
     user_id = user.id
     users_driver.handle_nonexistent_user(user_id)
@@ -76,6 +104,18 @@ async def create_tickets_by_event_id(event_id: str,
     },
 )
 async def get_tickets_by_event_id(event_id: str) -> List[TicketOut]:
+    """
+    API endpoint to retrieve tickets for a given event ID.
+
+    Args:
+        event_id (str): A string representing the ID of the event to retrieve tickets for.
+
+    Raises:
+        HTTPException: If the event ID is invalid.
+
+    Returns:
+        List[TicketOut]: A list of TicketOut objects representing the tickets for the given event.
+    """
     if db_handler.is_valid_event_id(event_id) == 0:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
 
@@ -93,6 +133,18 @@ async def get_tickets_by_event_id(event_id: str) -> List[TicketOut]:
     },
 )
 async def get_tickets_by_ticket_id(ticket_id: str) -> TicketOut:
+    """
+    API endpoint to retrieve tickets for a given ticket ID.
+
+    Args:
+        ticket_id (str): A string representing the ID of the ticket to retrieve.
+
+    Raises:
+        HTTPException: If the ticket ID is invalid.
+
+    Returns:
+        TicketOut: A TicketOut object representing the ticket for the given ticket ID.
+    """
     if db_handler.is_valid_ticket_id(ticket_id) == 0:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ticket not found")
     return db_handler.get_ticket_by_id(ticket_id)
@@ -120,6 +172,21 @@ async def update_ticket_by_ticket_id(
         )],
         token: Annotated[str, Depends(oauth2_scheme)]
 ):
+    """
+    API endpoint to update a ticket for a given ticket ID.
+
+    Args:
+        ticket_id (str): A string representing the ID of the ticket to update.
+        updated_attributes (dict): A dictionary representing the attributes to update.
+        token (str): A string representing the authentication token.
+
+    Raises:
+        HTTPException: If the ticket ID is invalid or there's an error updating the ticket.
+
+    Returns:
+        PlainTextResponse: A plain text response indicating the ticket was updated successfully.
+
+    """
     user: UserToken = token_handler.get_user(token)
     user_id = user.id
     users_driver.handle_nonexistent_user(user_id)
@@ -146,6 +213,20 @@ async def update_ticket_by_ticket_id(
 )
 async def update_ticket_by_available_quantity(ticket_id: str,
                                               quantity: int, token: Annotated[str, Depends(oauth2_scheme)]):
+    """
+    API endpoint to update a ticket for a given ticket ID.
+
+    Args:
+        ticket_id (str): A string representing the ID of the ticket to update.
+        quantity (int): A integer representing the number of tickets to update.
+        token (str): A string representing the authentication token.
+
+    Raises:
+        HTTPException: If the ticket ID is invalid or there's an error updating the ticket.
+
+    Returns:
+        PlainTextResponse: A plain text response indicating the ticket was updated successfully.
+    """
     user: UserToken = token_handler.get_user(token)
     user_id = user.id
     users_driver.handle_nonexistent_user(user_id)
@@ -171,6 +252,19 @@ async def update_ticket_by_available_quantity(ticket_id: str,
     },
 )
 async def delete_tickets_by_event_id(event_id: str,  token: Annotated[str, Depends(oauth2_scheme)]):
+    """
+    API endpoint to delete tickets for a given event ID.
+
+    Args:
+        event_id (str): A string representing the ID of the event to delete tickets for.
+        token (str): A string representing the authentication token.
+
+    Raises:
+        HTTPException: If the event ID is invalid or there's an error deleting the tickets.
+
+    Returns:
+        PlainTextResponse: A plain text response indicating the tickets were deleted successfully.
+    """
     user: UserToken = token_handler.get_user(token)
     user_id = user.id
     users_driver.handle_nonexistent_user(user_id)
@@ -194,6 +288,20 @@ async def delete_tickets_by_event_id(event_id: str,  token: Annotated[str, Depen
     },
 )
 async def delete_tickets_by_ticket_id(ticket_id: str, token: Annotated[str, Depends(oauth2_scheme)]):
+    """
+    API endpoint to delete tickets for a given ticket ID.
+
+    Args:
+        ticket_id (str): A string representing the ID of the ticket to delete.
+        token (str): A string representing the authentication token.
+
+    Raises:
+        HTTPException: If the ticket ID is invalid or there's an error deleting the tickets.
+
+    Returns:
+        PlainTextResponse: A plain text response indicating the tickets were deleted successfully.
+
+    """
     user: UserToken = token_handler.get_user(token)
     user_id = user.id
     users_driver.handle_nonexistent_user(user_id)

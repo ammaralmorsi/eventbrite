@@ -21,9 +21,19 @@ db_handler = PromocodeDriver()
 users_driver = UsersDriver()
 token_handler = TokenHandler()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+# adding documentation using docstring
 
 
 def unlimited(promocode_id):
+    """
+    Helper function that checks if the given promocode is unlimited or not.
+
+    Args:
+    - promocode_id (str): The ID of the promocode to be checked.
+
+    Returns:
+    - bool: True if the given promocode is unlimited, False otherwise.
+    """
     code = db_handler.get_promocode_by_id(promocode_id)
     if code.is_limited is False:
         return True
@@ -31,6 +41,20 @@ def unlimited(promocode_id):
 
 
 def check_amount(promocode_id, amount):
+    """
+    Helper function that checks if the given promocode has enough amount to be updated or not.
+
+    Args:
+    - promocode_id (str): The ID of the promocode to be checked.
+    - amount (int): The amount by which the promocode is to be updated.
+
+    Raises:
+    - HTTPException(400): If the given amount is negative and there are not enough promocodes available.
+    - HTTPException(400): If the given amount is positive and the maximum number of promocodes have already been reached.
+
+    Returns:
+    - bool: True if the given promocode has enough amount to be updated, False otherwise.
+    """
     code = db_handler.get_promocode_by_id(promocode_id)
     if amount < 0:
         if code.current_amount + amount < 0:
@@ -60,6 +84,21 @@ def check_amount(promocode_id, amount):
 )
 async def create_promocodes_by_event_id(event_id: str,
                                         promocodes: List[PromoCode], token: Annotated[str, Depends(oauth2_scheme)]):
+    """
+    API endpoint that creates promocodes for the given event ID.
+
+    Args:
+    - event_id (str): The ID of the event for which the promocodes are to be created.
+    - promocodes (List[PromoCode]): The list of promocodes to be created.
+    - token (Annotated[str, Depends]): The authorization token for the API.
+
+    Raises:
+    - HTTPException: If the given event ID is invalid.
+    - HTTPException: If the promocodes creation fails.
+
+    Returns:
+    - PromocodeOut: The details of the created promocodes.
+    """
     user: UserToken = token_handler.get_user(token)
     user_id = user.id
     users_driver.handle_nonexistent_user(user_id)
@@ -104,6 +143,20 @@ async def update_promocode_by_id(promocode_id: str,
                                          "end_date_time": "2023-05-31T23:59:59"
                                      }
                                  )], token: Annotated[str, Depends(oauth2_scheme)]):
+    """
+    API endpoint that updates the given promocode.
+
+    Args:
+        promocode_id (str): The ID of the promocode to be updated.
+        updated_promocode (Annotated[dict, Body]): The updated promocode.
+        token (Annotated[str, Depends]): The authorization token for the API.
+
+    Raises:
+        HTTPException: If the given promocode ID is invalid.
+        HTTPException: If the promocode update fails.
+    Returns:
+        PlainTextResponse: The response of the API.
+    """
     user: UserToken = token_handler.get_user(token)
     user_id = user.id
     users_driver.handle_nonexistent_user(user_id)
@@ -130,6 +183,21 @@ async def update_promocode_by_id(promocode_id: str,
     },
 )
 async def update_promocode_amount_by_id(promocode_id: str, amount: int, token: Annotated[str, Depends(oauth2_scheme)]):
+    """
+    API endpoint that updates the given promocode amount.
+
+    Args:
+        promocode_id (str): The ID of the promocode to be updated.
+        amount (int): The amount to be updated.
+        token (Annotated[str, Depends]): The authorization token for the API.
+
+    Raises:
+        HTTPException: If the given promocode ID is invalid.
+        HTTPException: If the promocode amount update fails.
+
+    Returns:
+        PlainTextResponse: The response of the API.
+    """
     user: UserToken = token_handler.get_user(token)
     user_id = user.id
     users_driver.handle_nonexistent_user(user_id)
@@ -157,6 +225,18 @@ async def update_promocode_amount_by_id(promocode_id: str, amount: int, token: A
     },
 )
 async def get_promocodes_by_event_id(event_id: str) -> List[PromocodeOut]:
+    """
+    API endpoint that gets the promocodes of the given event.
+
+    Args:
+        event_id (str): The ID of the event.
+
+    Raises:
+        HTTPException: If the given event ID is invalid.
+
+    Returns:
+        List[PromocodeOut]: The list of promocodes of the given event.
+    """
     if not db_handler.is_valid_event_id(event_id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event ID not found")
 
@@ -174,6 +254,18 @@ async def get_promocodes_by_event_id(event_id: str) -> List[PromocodeOut]:
     },
 )
 async def get_promocode_by_id(promocode_id: str):
+    """
+    API endpoint that gets the promocode of the given id.
+
+    Args:
+        promocode_id (str): The ID of the promocode.
+
+    Raises:
+        HTTPException: If the given promocode ID is invalid.
+
+    Returns:
+        PromocodeOut: The promocode of the given id.
+    """
     if not db_handler.is_valid_promocode_id(promocode_id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Promocode ID not found")
 
@@ -191,6 +283,19 @@ async def get_promocode_by_id(promocode_id: str):
     },
 )
 async def delete_promocodes_by_event_id(event_id: str, token: Annotated[str, Depends(oauth2_scheme)]):
+    """
+    API endpoint that deletes the promocodes of the given event.
+
+    Args:
+        event_id (str): The ID of the event.
+        token (Annotated[str, Depends]): The authorization token for the API.
+
+    Raises:
+        HTTPException: If the given event ID is invalid.
+
+    Returns (PlainTextResponse): The response of the API.
+
+    """
     user: UserToken = token_handler.get_user(token)
     user_id = user.id
     users_driver.handle_nonexistent_user(user_id)
@@ -212,6 +317,19 @@ async def delete_promocodes_by_event_id(event_id: str, token: Annotated[str, Dep
     },
 )
 async def delete_promocode_by_id(promocode_id: str, token: Annotated[str, Depends(oauth2_scheme)]):
+    """
+    API endpoint that deletes the promocode of the given id.
+
+    Args:
+        promocode_id (str): The ID of the promocode.
+        token (Annotated[str, Depends]): The authorization token for the API.
+
+    Raises:
+        HTTPException: If the given promocode ID is invalid.
+
+    Returns:
+        PlainTextResponse: The response of the API.
+    """
     user: UserToken = token_handler.get_user(token)
     user_id = user.id
     users_driver.handle_nonexistent_user(user_id)
