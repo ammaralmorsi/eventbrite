@@ -10,6 +10,26 @@ from email.mime.multipart import MIMEMultipart
 from datetime import datetime
 from datetime import timedelta
 
+"""
+This module contains a class EmailHandler that is used for sending emails using the Gmail SMTP server. The class 
+defines two types of emails, SIGNUP_VERIFICATION and FORGET_PASSWORD, and generates the HTML content for both types of 
+emails. The class also has a method for sending emails.
+
+Functions:
+    - __init__(): Initializes the class with the necessary instance variables.
+    - generate_html_for_signup_verification(token: str): Generates the HTML content for SIGNUP_VERIFICATION email.
+    - generate_html_for_forgot_password(token: str): Generates the HTML content for FORGET_PASSWORD email.
+    - get_email_body(email_type: EmailType, token: str): Returns the HTML content for the specified email type.
+    - send_email(email: str, token: str, email_type: EmailType): Sends an email of the specified email type to the 
+      specified email address.
+
+Constants:
+    - EmailType: An enum that defines the two types of emails, SIGNUP_VERIFICATION and FORGET_PASSWORD.
+
+Usage:
+    Create an instance of the EmailHandler class and use the send_email method to send emails. The method takes an 
+    email address, a token, and an email type as parameters. The email type determines the content of the email.
+"""
 
 class EmailType(Enum):
     SIGNUP_VERIFICATION = "SIGNUP_VERIFICATION"
