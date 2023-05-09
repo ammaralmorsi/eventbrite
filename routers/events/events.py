@@ -87,7 +87,9 @@ async def create_event(
         is_free=ticket_driver.is_free_event(event_out_id),
         id=event_out_id,
         **event_in.dict(),
+        creator_id=user.id
     )
+
 
 @router.get(
     "/id/{event_id}",
