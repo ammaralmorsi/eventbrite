@@ -6,6 +6,20 @@ from pydantic import Field
 
 
 class PromoCode(BaseModel):
+    """
+    Represents a promotional code that can be applied to an event ticket.
+
+    Attributes:
+        name (str): Name of the promocode.
+        is_limited (bool): Flag indicating if the promocode is limited.
+        limited_amount (int): Limited amount of the promocode (must be greater than 0).
+        current_amount (int): Current amount of the promocode.
+        is_percentage (bool): Flag indicating if the promocode is percentage or amount.
+        discount_amount (float): Discount percentage or amount (must be greater than 0).
+        start_date_time (datetime): Start date and time of the promocode.
+        end_date_time (datetime): End date and time of the promocode.
+    """
+
     name: Annotated[str, Field(
         description="Name of the promocode",
         example="SALE10",
@@ -44,6 +58,12 @@ class PromoCode(BaseModel):
 
 
 class PromocodeDB(PromoCode):
+    """
+    Represents a promotional code that is stored in the database.
+
+    Attributes:
+        event_id (str): ID of the promocode.
+    """
     event_id: Annotated[str, Field(
         description="ID of the promocode",
         example="gshacgjhvfdks",
@@ -51,6 +71,12 @@ class PromocodeDB(PromoCode):
 
 
 class PromocodeOut(PromocodeDB):
+    """
+    Represents a promotional code that is returned in API responses.
+
+    Attributes:
+        id (str): ID of the promocode.
+    """
     id: Annotated[str, Field(
         description="ID of the promocode",
         example="gshacgjhvfdry",
