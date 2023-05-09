@@ -55,18 +55,36 @@ def test_verify_email():
 
 
 def test_login():
-    response = client.post("/auth/login", json=user_login)
-    assert response.status_code == 422
+    response = client.post(
+        "/auth/login",
+        data={
+            "username": user_login["username"],
+            "password": user_login["password"]
+        },
+    )
+    assert response.status_code == 200
 
 
 def test_login_with_wrong_data():
-    response = client.post("/auth/login", json=user_wrong_data)
-    assert response.status_code == 422
+    response = client.post(
+        "/auth/login",
+        data={
+            "username": user_wrong_data["username"],
+            "password": user_wrong_data["password"]
+        },
+    )
+    assert response.status_code == 401
 
 
 def test_login_with_google():
-    response = client.post("/auth/login", json=user_login)
-    assert response.status_code == 422
+    response = client.post(
+        "/auth/login-with-google",
+        data={
+            "username": user_login["username"],
+            "password": "any password"
+        },
+    )
+    assert response.status_code == 200
 
 
 def test_change_password_with_valid_token_and_password():
