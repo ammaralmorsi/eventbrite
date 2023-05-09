@@ -30,9 +30,6 @@ def get_user_id(email):
     user = user_driver.get_user_by_email(email)
     return user.id
 
-def remove_user_by_email(email):
-    user_driver.collection.delete_one({"email": email})
-
 
 def test_signup():
     response = client.post("/auth/signup", json=user_signup)
@@ -112,7 +109,7 @@ def test_update_password_with_valid_token_and_password():
     assert response.status_code == 200
 
 
-def test_update_password_without_valid_token_and_password():
+def test_update_password_with_invalid_token_and_password():
     user_email = user_signup["email"]
     user_id = get_user_id(user_email)
     user = UserToken(email=user_email, id=user_id)
@@ -124,4 +121,3 @@ def test_update_password_without_valid_token_and_password():
     }
     response = client.put("/auth/update-password", json=data, headers={"Authorization": f"Bearer {token}"})
     assert response.status_code == 401
-    remove_user_by_email(user_signup["email"])
