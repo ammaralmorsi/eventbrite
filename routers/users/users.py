@@ -282,7 +282,18 @@ async def unlike_event(event_id: str, token: Annotated[str, Depends(oauth2_schem
                             "title": "event title",
                             "start_date_time": "2021-10-10T10:10:10",
                             "image_link": "https://www.gravatar.com/avatar/205e460b479e2e5b48aec07710c08d50?s=200",
-                            "is_online": True
+                            "is_online": True,
+                            "creator_info": {
+                                "id": "creator_id",
+                                "email": "creator email",
+                                "firstname": "creator firstname",
+                                "lastname": "creator lastname",
+                                "avatar_url": "https://www.gravatar.com/avatar/205e460b479e2e5b48aec07710c08d50?s=200",
+                            },
+                            "location": {
+                                "is_online": True,
+                                "City": "city",
+                            }
                         },
                         {
                             "id": "event_id",
@@ -318,7 +329,9 @@ async def get_liked_events(token: Annotated[str, Depends(oauth2_scheme)]) -> lis
             title=event_out.basic_info.title,
             start_date_time=event_out.date_and_time.start_date_time,
             image_link=event_out.image_link,
-            is_online=event_out.location.is_online
+            is_online=event_out.location.is_online,
+            creator_info=users_driver.get_user_by_id(event_out.creator_id),
+            location=event_out.location
         )
         for event_out in [
             event_driver.get_event_by_id(event_id) for event_id in likes_driver.get_liked_events(user.id)

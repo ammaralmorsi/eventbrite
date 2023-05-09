@@ -6,6 +6,7 @@ from pydantic import Field
 
 from dependencies.models.tickets import TicketIn
 from dependencies.models.promocodes import PromoCode
+from dependencies.models.users import UserInfo
 
 
 class BasicInfo(BaseModel):
@@ -169,3 +170,14 @@ class EventCard(BaseModel):
         description="Type of the location (venue or online)",
         example="false",
     )]
+    creator_info: Annotated[UserInfo, Field(
+        description="User info of the creator of the event",
+        example={
+            "id": "2dg3f4g5h6j7k8l9",
+            "first_name": "John",
+            "last_name": "Doe",
+            "avatar_url": "https://www.example.com/image.png",
+            "email": "example@domain.com"
+        },
+    )]
+    location: location_type
