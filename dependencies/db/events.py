@@ -27,15 +27,9 @@ class EventDriver:
         event_id = convert_to_object_id(event_id)
         return self.collection.find_one({"_id": event_id}) is not None
 
-    def create_new_event(self, event: models.EventDB) -> models.EventOut:
+    def create_new_event(self, event: models.EventDB):
         try:
-            inserted_id = self.collection.insert_one(event.dict()).inserted_id
-            return models.EventOut(
-                price=self.tickets_driver.get_minimum_price(str(inserted_id)),
-                is_free=self.tickets_driver.is_free_event(str(inserted_id)),
-                id=str(inserted_id),
-                **event.dict()
-            )
+            return str(self.collection.insert_one(event.dict()).inserted_id)
         except mongo_errors.PyMongoError:
             raise HTTPException(detail="database error", status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
