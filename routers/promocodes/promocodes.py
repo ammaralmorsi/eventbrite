@@ -160,7 +160,7 @@ async def get_promocode_by_id(promocode_id: str):
 
 
 @router.delete(
-    "event_id/{event_id}",
+    "/event_id/{event_id}",
     summary="Delete promocodes by event id",
     description="This endpoint allows you to delete promocodes by event id.",
     tags=["promocodes"],
