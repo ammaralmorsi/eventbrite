@@ -22,6 +22,7 @@ event_driver = EventDriver()
 #token
 token_handler = TokenHandler()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+
 @router.post(
     "/{event_id}/add_order",
     summary="Add order to event",
@@ -43,6 +44,9 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
         status.HTTP_404_NOT_FOUND: {
             "description": "Event not found.",
         },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "Unauthorized.",
+        },
     },
 )
 async def add_order(event_id: str,
@@ -55,14 +59,13 @@ async def add_order(event_id: str,
     "event_id":"6459447df0c9d6f57d894a60",
     "created_date":"2021-08-12T12:00:00.000Z",
     "price":100,
-    "user_id":"64594543f0c9d6f57d894a68",
     "image_link":"https://www.example.com/image.png"
     })
 )->OrderOut:
     event_driver.handle_nonexistent_event(event_id)
     user: UserToken = token_handler.get_user(token)
     order.user_id = user.id
-    users_driver.handle_nonexistent_user(order.user_id)
+    users_driver.handle_nonexistent_user(order.user_id)#i think it's not necessary done in get user
     return db_handler.add_order(event_id, order)
 
 @router.get(
@@ -75,7 +78,7 @@ async def get_order(order_id: str)->OrderOut:
     return db_handler.get_order(order_id)
 
 @router.get(
-    "/user_id/{user_id}",
+    "/myorders/",
     summary="Get orders by user id",
     description="This endpoint allows you to get orders by user id.",
     responses={
@@ -122,10 +125,15 @@ async def get_order(order_id: str)->OrderOut:
         status.HTTP_404_NOT_FOUND: {
             "description": "User not found.",
         },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "Unauthorized.",
+        },
     },
 )
-async def get_orders_by_user_id(user_id: str)->List[OrderOut]:
-    users_driver.handle_nonexistent_user(user_id)
+async def get_orders_by_user_id( token: Annotated[str, Depends(oauth2_scheme)])->List[OrderOut]:
+    user: UserToken = token_handler.get_user(token)
+    user_id = user.id
+    users_driver.handle_nonexistent_user(user_id)#i think it's not necessary done in get user
     return db_handler.get_user_orders(user_id)
 
 @router.get(
@@ -198,9 +206,13 @@ async def get_orders_by_event_id(event_id: str)->List[OrderOut]:
         status.HTTP_404_NOT_FOUND: {
             "description": "Order not found.",
         },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "Unauthorized.",
+        },
     },
 )
 async def edit_order(order_id: str,
+    token: Annotated[str, Depends(oauth2_scheme)],
     updated_attributes=Body(...,description="Order model",
     example={
     "first_name":"John",
@@ -208,6 +220,9 @@ async def edit_order(order_id: str,
     "email":"ahmed2@gmail.com",
     })
     ):
+    user: UserToken = token_handler.get_user(token)
+    user_id = user.id
+    users_driver.handle_nonexistent_user(user_id)#i think it's not necessary done in get user
     db_handler.handle_nonexistent_order(order_id)
     db_handler.edit_order(order_id, updated_attributes)
     return PlainTextResponse("Order edited successfully.", status_code=status.HTTP_200_OK)
@@ -224,7 +239,12 @@ async def edit_order(order_id: str,
         },
     },
 )
-async def delete_order(order_id: str):
+async def delete_order(order_id: str,
+        token: Annotated[str, Depends(oauth2_scheme)]
+    ):
+    user: UserToken = token_handler.get_user(token)
+    user_id = user.id
+    users_driver.handle_nonexistent_user(user_id)#i think it's not necessary done in get user
     db_handler.handle_nonexistent_order(order_id)
     db_handler.delete_order(order_id)
     return PlainTextResponse("Order deleted successfully.", status_code=status.HTTP_200_OK)

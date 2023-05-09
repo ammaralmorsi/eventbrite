@@ -9,6 +9,7 @@ from dependencies.db.orders import OrderDriver
 #token
 from dependencies.token_handler import TokenHandler
 from fastapi.security import OAuth2PasswordBearer
+from dependencies.models.users import UserToken
 from fastapi import Depends
 
 
@@ -21,6 +22,9 @@ db_handler = AttendeeDriver()
 users_driver = UsersDriver()
 event_driver = EventDriver()
 order_driver = OrderDriver()
+#token
+token_handler = TokenHandler()
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 @router.post(
     "/{event_id}/add_attendee",
@@ -42,9 +46,13 @@ order_driver = OrderDriver()
         status.HTTP_404_NOT_FOUND: {
             "description": "Event not found.",
         },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "Unauthorized.",
+        },
     },
 )
 async def add_attendee(event_id: str,
+    token: Annotated[str, Depends(oauth2_scheme)],
     attendee: Attendee = Body(...,description="Attendee model",
     example={
         "first_name":"John",
@@ -55,6 +63,9 @@ async def add_attendee(event_id: str,
         "event_id":"6459447df0c9d6f57d894a60",
     })
     )->AttendeeOut:
+    user: UserToken = token_handler.get_user(token)
+    user_id = user.id
+    users_driver.handle_nonexistent_user(user_id)#i think this is not needed
     event_driver.handle_nonexistent_event(event_id)
     order_driver.handle_nonexistent_order(attendee.order_id)
     #update the count of order tickets
@@ -104,8 +115,8 @@ async def get_attendee(attendee_id: str)->AttendeeOut:
                 "id":"sadgjh232",
             },
             {
-                "first_name":"John",
-                "last_name":"Doe",
+                "first_name":"hana",
+                "last_name":"fahme",
                 "email":"go@go.com",
                 "type_of_reseved_ticket":"VIP",
                 "order_id":"64594a6ec8bd709f5881b8a2",
@@ -113,8 +124,8 @@ async def get_attendee(attendee_id: str)->AttendeeOut:
                 "id":"sadgjh2343",
             },
             {
-                "first_name":"John",
-                "last_name":"Doe",
+                "first_name":"gamal",
+                "last_name":"hossam",
                 "email":"hi@hi.com",
                 "type_of_reseved_ticket":"VIP",
                 "order_id":"64594a6ec8bd709f5881b8a3",
@@ -188,9 +199,23 @@ async def get_attendees_by_order_id(order_id: str)->List[AttendeeOut]:
         status.HTTP_404_NOT_FOUND: {
             "description": "Attendee not found.",
         },
+        status.HTTP_401_UNAUTHORIZED: {
+            "description": "Unauthorized.",
+        },
     }
 )
-async def update_attendee(attendee_id: str,updated_attributes=Body(...,description="Attendee model" )):
+async def update_attendee(attendee_id: str,
+    token: Annotated[str, Depends(oauth2_scheme)],
+    updated_attributes=Body(...,description="Attendee model",
+    example={
+        "first_name":"John",
+        "last_name":"Doe",
+        "email":"iman@yahoo.com",
+        }
+     )):
+    user: UserToken = token_handler.get_user(token)
+    user_id = user.id
+    users_driver.handle_nonexistent_user(user_id)#i think this is not needed
     db_handler.handle_nonexistent_attendee(attendee_id)
     db_handler.update_attendee(attendee_id, updated_attributes)
     return PlainTextResponse("Attendee updated successfully.", status_code=status.HTTP_200_OK)
@@ -208,7 +233,11 @@ async def update_attendee(attendee_id: str,updated_attributes=Body(...,descripti
         },
     }
 )
-async def delete_attendee(attendee_id: str):
+async def delete_attendee(attendee_id: str,
+    token: Annotated[str, Depends(oauth2_scheme)]):
+    user: UserToken = token_handler.get_user(token)
+    user_id = user.id
+    users_driver.handle_nonexistent_user(user_id)#i think this is not needed
     db_handler.handle_nonexistent_attendee(attendee_id)
         #update the count of order tickets
     #order_driver.upate_tickets_count(attendee.order_id, -1)
