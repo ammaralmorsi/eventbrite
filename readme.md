@@ -63,4 +63,3 @@ If you have any issues, or you want to improve the apis and docs, please create 
 what exactly the issue is, and how should we help you solve it. So for example if our api doesn't fit your needs, you
 should create an issue that describes what you want to do, and how you want to do it. If you want to improve the docs,
 you should create an issue that describes what you want to improve, and how you want to improve it.
-*do not send whatsapp messages*
