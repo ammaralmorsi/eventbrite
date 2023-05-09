@@ -6,6 +6,17 @@ from pydantic import Field
 
 
 class TicketIn(BaseModel):
+    """
+    A Pydantic data model representing an input ticket, with validation rules for each field.
+
+    Attributes:
+        type (str): Type of the ticket (regular or VIP)
+        name (str): Name of the ticket
+        max_quantity (int): Quantity of tickets (must be greater than 0)
+        price (int): Price of the ticket (must be greater than 0)
+        sales_start_date_time (datetime): Sales start date and time of the ticket
+        sales_end_date_time (datetime): Sales end date and time of the ticket
+    """
     type: Annotated[str, Field(
         description="Type of the ticket (regular or VIP)",
         example="regular",
@@ -34,6 +45,14 @@ class TicketIn(BaseModel):
 
 
 class TicketDB(TicketIn):
+    """
+    A Pydantic data model representing a ticket in the database, with validation rules for each field.
+
+    Attributes:
+        event_id (str): Event ID of the ticket
+        available_quantity (int): Available quantity of the ticket
+    """
+
     event_id: Annotated[str, Field(
         description="Event ID of the ticket",
         example="23dfbsdbf23",
@@ -45,6 +64,12 @@ class TicketDB(TicketIn):
 
 
 class TicketOut(TicketDB):
+    """
+    A Pydantic data model representing a ticket output, with validation rules for each field.
+
+    Attributes:
+        id (str): Ticket ID
+    """
     id: Annotated[str, Field(
         description="Ticket ID",
         example="23dfbsdbf23",
