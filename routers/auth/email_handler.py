@@ -42,16 +42,17 @@ class EmailHandler:
         self.source_password = os.environ.get("EVENTBRITE_PASSWORD")
         self.message = None
         self.expiration_date = datetime.utcnow() + timedelta(hours=24)
+        self.host = os.environ.get("FRONT_HOSTNAME")
 
     def generate_html_for_signup_verification(self, token):
-        verification_link = f"http://127.0.0.1:8000/auth/verify?token={token}"
+        verification_link = f"{self.host}/verify?token={token}"
         html = f"<p>Thank you for signing up! Please click the following link to verify your email address:</p>" \
                f"<p><a href='{verification_link}'>{verification_link}</a></p>" \
                f"\<p>The link will expire on {self.expiration_date}.</p>"
         return html
 
     def generate_html_for_forgot_password(self, token):
-        verification_link = f"http://example.com/token={token}"
+        verification_link = f"{self.host}/change-password?token={token}"
         html = f"<p>Click the following link to reset your password:</p>" \
                f"<p><a href='{verification_link}'>{verification_link}</a></p>" \
                f"<p>The link will expire on {self.expiration_date}.</p>"
