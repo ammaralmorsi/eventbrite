@@ -8,7 +8,7 @@ from fastapi import status
 class AttendeeDriver:
     def __init__(self):
         self.db = Client().get_instance().get_db()
-        self.collection = self.db["Attendees"]
+        self.collection = self.db["attendees"]#Attendees collection
 
     def handle_nonexistent_attendee(self, attendee_id):
         if not self.collection.find_one({"_id": convert_to_object_id(attendee_id)}):

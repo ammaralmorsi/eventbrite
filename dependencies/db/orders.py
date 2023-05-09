@@ -12,7 +12,7 @@ class OrderDriver:
     def __init__(self):
         self.db = Client().get_instance().get_db()
         self.collection = self.db["orders"]
-        self.atteendee_collection = self.db["attendees"]
+        # self.atteendee_collection = self.db["attendees"]
 
     def handle_nonexistent_order(self, order_id:str):
         if not self.collection.find_one({"_id": convert_to_object_id(order_id)}):
