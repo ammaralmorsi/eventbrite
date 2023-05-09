@@ -6,6 +6,7 @@ from dependencies.db.users import UsersDriver
 from dependencies.db.attendees import AttendeeDriver
 from dependencies.db.events import EventDriver
 from dependencies.db.orders import OrderDriver
+from .email_handler import EmailHandler
 #token
 from dependencies.token_handler import TokenHandler
 from fastapi.security import OAuth2PasswordBearer
@@ -25,6 +26,10 @@ order_driver = OrderDriver()
 #token
 token_handler = TokenHandler()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+#email
+email_handler = EmailHandler()
+
+
 
 @router.post(
     "/{event_id}/add_attendee",
@@ -70,6 +75,8 @@ async def add_attendee(event_id: str,
     order_driver.handle_nonexistent_order(attendee.order_id)
     #update the count of order tickets
     #order_driver.upate_tickets_count(attendee.order_id, 1)
+    #send email
+    email_handler.send_email(attendee.email, event_id,attendee)
     return db_handler.add_attendee(event_id, attendee)
 
 @router.get(
