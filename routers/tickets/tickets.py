@@ -4,6 +4,11 @@ from fastapi import APIRouter, HTTPException, status, Body
 from dependencies.db.tickets import TicketDriver
 from dependencies.models.tickets import TicketIn, TicketOut
 
+from dependencies.db.users import UsersDriver
+from dependencies.token_handler import TokenHandler
+from fastapi.security import OAuth2PasswordBearer
+from dependencies.models.users import UserToken
+from fastapi import Depends
 
 router = APIRouter(
     prefix="/tickets",
@@ -11,6 +16,10 @@ router = APIRouter(
 )
 
 db_handler = TicketDriver()
+
+users_driver = UsersDriver()
+token_handler = TokenHandler()
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 
 def check_quantity(ticket_id, quantity):
@@ -42,7 +51,11 @@ def check_quantity(ticket_id, quantity):
         400: {"description": "Error creating tickets"},
     },
 )
-async def create_tickets_by_event_id(event_id: str, tickets: List[TicketIn]):
+async def create_tickets_by_event_id(event_id: str,
+                                     tickets: List[TicketIn], token: Annotated[str, Depends(oauth2_scheme)]):
+    user: UserToken = token_handler.get_user(token)
+    user_id = user.id
+    users_driver.handle_nonexistent_user(user_id)
     if not db_handler.is_valid_event_id(event_id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
     inserted = db_handler.create_tickets(event_id, tickets)
@@ -104,8 +117,12 @@ async def update_ticket_by_ticket_id(
                 "sales_start_date_time": "2023-05-01T00:00:00",
                 "sales_end_date_time": "2023-05-31T23:59:59",
             },
-        )]
+        )],
+        token: Annotated[str, Depends(oauth2_scheme)]
 ):
+    user: UserToken = token_handler.get_user(token)
+    user_id = user.id
+    users_driver.handle_nonexistent_user(user_id)
     if db_handler.is_valid_ticket_id(ticket_id) == 0:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ticket not found")
 
@@ -127,7 +144,11 @@ async def update_ticket_by_ticket_id(
         400: {"description": "Too many tickets"},
     },
 )
-async def update_ticket_by_available_quantity(ticket_id: str, quantity: int):
+async def update_ticket_by_available_quantity(ticket_id: str,
+                                              quantity: int, token: Annotated[str, Depends(oauth2_scheme)]):
+    user: UserToken = token_handler.get_user(token)
+    user_id = user.id
+    users_driver.handle_nonexistent_user(user_id)
     if db_handler.is_valid_ticket_id(ticket_id) == 0:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ticket not found")
 
@@ -149,7 +170,10 @@ async def update_ticket_by_available_quantity(ticket_id: str, quantity: int):
         404: {"description": "Event not found"},
     },
 )
-async def delete_tickets_by_event_id(event_id: str):
+async def delete_tickets_by_event_id(event_id: str,  token: Annotated[str, Depends(oauth2_scheme)]):
+    user: UserToken = token_handler.get_user(token)
+    user_id = user.id
+    users_driver.handle_nonexistent_user(user_id)
     if db_handler.is_valid_event_id(event_id) == 0:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
 
@@ -169,7 +193,10 @@ async def delete_tickets_by_event_id(event_id: str):
         404: {"description": "Ticket not found"},
     },
 )
-async def delete_tickets_by_ticket_id(ticket_id: str):
+async def delete_tickets_by_ticket_id(ticket_id: str, token: Annotated[str, Depends(oauth2_scheme)]):
+    user: UserToken = token_handler.get_user(token)
+    user_id = user.id
+    users_driver.handle_nonexistent_user(user_id)
     if db_handler.is_valid_ticket_id(ticket_id) == 0:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ticket not found")
 

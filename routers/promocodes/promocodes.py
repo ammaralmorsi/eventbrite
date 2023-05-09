@@ -4,12 +4,23 @@ from typing import List, Annotated
 from dependencies.db.promocodes import PromocodeDriver
 from dependencies.models.promocodes import PromoCode, PromocodeOut
 
+from dependencies.db.users import UsersDriver
+from dependencies.token_handler import TokenHandler
+from fastapi.security import OAuth2PasswordBearer
+from dependencies.models.users import UserToken
+from fastapi import Depends
+
+
 router = APIRouter(
     prefix="/promocodes",
     tags=["promocodes"],
 )
 
 db_handler = PromocodeDriver()
+
+users_driver = UsersDriver()
+token_handler = TokenHandler()
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 
 def unlimited(promocode_id):
@@ -47,7 +58,11 @@ def check_amount(promocode_id, amount):
         500: {"description": "Promocodes creation failed"},
     },
 )
-async def create_promocodes_by_event_id(event_id: str, promocodes: List[PromoCode]):
+async def create_promocodes_by_event_id(event_id: str,
+                                        promocodes: List[PromoCode], token: Annotated[str, Depends(oauth2_scheme)]):
+    user: UserToken = token_handler.get_user(token)
+    user_id = user.id
+    users_driver.handle_nonexistent_user(user_id)
     if not db_handler.is_valid_event_id(event_id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event ID is invalid")
 
@@ -88,7 +103,10 @@ async def update_promocode_by_id(promocode_id: str,
                                          "start_date_time": "2023-05-01T00:00:00",
                                          "end_date_time": "2023-05-31T23:59:59"
                                      }
-                                 )]):
+                                 )], token: Annotated[str, Depends(oauth2_scheme)]):
+    user: UserToken = token_handler.get_user(token)
+    user_id = user.id
+    users_driver.handle_nonexistent_user(user_id)
     if not db_handler.is_valid_promocode_id(promocode_id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Promocode ID is invalid")
 
@@ -111,7 +129,10 @@ async def update_promocode_by_id(promocode_id: str,
         408: {"description": "Promocode amount update failed"},
     },
 )
-async def update_promocode_amount_by_id(promocode_id: str, amount: int):
+async def update_promocode_amount_by_id(promocode_id: str, amount: int, token: Annotated[str, Depends(oauth2_scheme)]):
+    user: UserToken = token_handler.get_user(token)
+    user_id = user.id
+    users_driver.handle_nonexistent_user(user_id)
     if not db_handler.is_valid_promocode_id(promocode_id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Promocode ID is invalid")
 
@@ -169,7 +190,10 @@ async def get_promocode_by_id(promocode_id: str):
         404: {"description": "Event ID is invalid"},
     },
 )
-async def delete_promocodes_by_event_id(event_id: str):
+async def delete_promocodes_by_event_id(event_id: str, token: Annotated[str, Depends(oauth2_scheme)]):
+    user: UserToken = token_handler.get_user(token)
+    user_id = user.id
+    users_driver.handle_nonexistent_user(user_id)
     if not db_handler.is_valid_event_id(event_id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event ID is invalid")
 
@@ -187,7 +211,10 @@ async def delete_promocodes_by_event_id(event_id: str):
         404: {"description": "Promocode ID is invalid"},
     },
 )
-async def delete_promocode_by_id(promocode_id: str):
+async def delete_promocode_by_id(promocode_id: str, token: Annotated[str, Depends(oauth2_scheme)]):
+    user: UserToken = token_handler.get_user(token)
+    user_id = user.id
+    users_driver.handle_nonexistent_user(user_id)
     if not db_handler.is_valid_promocode_id(promocode_id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Promocode ID is invalid")
 
