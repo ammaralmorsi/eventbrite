@@ -35,7 +35,7 @@ class TicketDriver:
         return False
 
     def get_minimum_price(self, event_id):
-        tickets = self.collection.find({"event_id": event_id})
+        tickets = list(self.collection.find({"event_id": event_id}))
         if tickets:
             minimum_price = tickets[0]["price"]
         else:
