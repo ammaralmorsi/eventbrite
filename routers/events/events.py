@@ -89,7 +89,6 @@ async def create_event(
         **event_in.dict(),
     )
 
-
 @router.get(
     "/id/{event_id}",
     summary="Get an event by id",
