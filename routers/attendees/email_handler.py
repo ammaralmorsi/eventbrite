@@ -28,7 +28,7 @@ class EmailHandler:
         self.message["Subject"] = "Order Confirmation"
         event=event_driver.get_event_by_id(event_id)
         #msg="Dear "+email+" ,\n"+"Thank you for your order for "+event["name"]+" event.\n"+"Your order is confirmed.\n"+"Your order id is "+event["id"]+"\n"+"Your order will expire at "+str(self.expiration_date)+"\n"+"Best Regards,\n"+"Eventbrite Team"
-        msg="Dear "+attendee["first_name"]+" "+attendee["last_name"]+" ,\n"+"Thank you for your order for event "+event["basic_info"]+" event.\n"+"Your order is confirmed.\n"+"Your order id is "+attendee["order_id"]+"\n"+"Best Regards,\n"+"Eventbrite Team"
+        msg="Dear "+attendee.first_name+" "+attendee.last_name+" ,\n"+"Thank you for your order for event "+event.basic_info.title+" event.\n"+"Your order is confirmed.\n"+"Your order id is "+attendee.order_id+"\n"+"Best Regards,\n"+"Eventbrite Team"
         self.message.attach(MIMEText(msg, "plain"))
         try:
             server = smtplib.SMTP_SSL("smtp.gmail.com", 465)
