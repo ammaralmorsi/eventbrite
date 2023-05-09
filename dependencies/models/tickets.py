@@ -20,7 +20,6 @@ class TicketIn(BaseModel):
         example=10,
     )]
     price: Annotated[int, Field(
-        gt=-1,
         description="Price of the ticket (must be greater than 0)",
         example=50,
     )]
