@@ -62,7 +62,6 @@ def test_get_tickets_by_invalid_ticket_id():
 
 
 def test_update_ticket_by_id():
-    id = ticket_id()
     response = client.put(f"/tickets/ticket_id/{ticket_id()}", json=updated_ticket)
     assert response.status_code == 200
 
