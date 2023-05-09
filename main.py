@@ -1,3 +1,7 @@
+"""
+created by: Ahmed Maher, Abdulhameed Osama, Ahmed Fathy, and Ammar AlMorsi
+at: 10 May 2023.
+"""
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_pagination import add_pagination
