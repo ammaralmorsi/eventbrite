@@ -13,9 +13,10 @@ pipeline
     
         stage('Build') {
             steps {
-                bash "conda activate eventbrite"
-                bash "pip install -r requirements.txt"
-                bash "uvicorn main:app --host 0.0.0.0 --port 5000" 
+                sh "source ~/.bashrc"
+                sh "conda activate eventbrite"
+                sh "pip install -r requirements.txt"
+                sh "uvicorn main:app --host 0.0.0.0 --port 5000 &" 
                 
             }
         }
