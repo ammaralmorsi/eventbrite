@@ -2,9 +2,18 @@ pipeline
 {
     agent any
     stages { 
+    stage('Fetch code') {
+            steps {
+                git branch: 'main',
+                credentialsId: 'Elmeselhy',
+                url: 'https://github.com/ammaralmorsi/eventbrite.git'
+            }
+    
+    
         stage('Test') {
             steps {
                 echo "we need to install dependancies first This step tests the project"
+                
             }
         }
         
