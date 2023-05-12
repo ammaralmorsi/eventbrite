@@ -11,9 +11,11 @@ pipeline
        }
     
     
-        stage('Test') {
+        stage('Build') {
             steps {
-                echo "we need to install dependancies first This step tests the project"
+                sh "conda activate eventbrite"
+                sh "pip install -r requirements.txt"
+                sh "uvicorn main:app --host 0.0.0.0 --port 5000" 
                 
             }
         }
