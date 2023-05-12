@@ -8,6 +8,7 @@ pipeline
                 credentialsId: 'Elmeselhy',
                 url: 'https://github.com/ammaralmorsi/eventbrite.git'
             }
+       }
     
     
         stage('Test') {
