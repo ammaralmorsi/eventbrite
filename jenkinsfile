@@ -9,14 +9,29 @@ pipeline
                 url: 'https://github.com/ammaralmorsi/eventbrite.git'
             }
        }
+     stage('pre build') {
+            steps {
+               sh '''#!/usr/bin/env bash
+               wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -nv -O miniconda.sh
+               bash miniconda.sh -b -p $WORKSPACE/miniconda
+               conda config --set always_yes yes --set changeps1 no
+               conda update -q conda
+
+               conda create -n eventbrite python=3.10.4
+               '''
+            }
+       }
     
     
         stage('Build') {
             steps {
              
-               sh '''#!/bin/bash
-               . /home/ubuntu/miniconda3/bin/activate eventbrite
-               '''
+               sh '''#!/usr/bin/env bash
+                    source $WORKSPACE/miniconda/etc/profile.d/conda.sh
+                    conda activate miniconda/envs/eventbrite/
+
+                    # do stuff
+                    '''
                 
                 sh "pip install -r requirements.txt"
                  
