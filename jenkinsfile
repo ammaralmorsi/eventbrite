@@ -13,10 +13,13 @@ pipeline
     
         stage('Build') {
             steps {
-                sh "source ~/.bashrc"
-                sh "conda activate eventbrite"
+             
+               sh '''#!/bin/bash
+               . /home/ubuntu/miniconda3/bin/activate eventbrite
+               '''
+                
                 sh "pip install -r requirements.txt"
-                sh "uvicorn main:app --host 0.0.0.0 --port 5000 &" 
+                 
                 
             }
         }
@@ -24,6 +27,7 @@ pipeline
         stage('Deploy') {
             steps {
                 echo "This stage deploys the project"
+                sh "uvicorn main:app --host 0.0.0.0 --port 5000 &"
             }
         }        
         stage('Report') {
