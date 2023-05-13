@@ -145,7 +145,6 @@ class EventDB(BaseModel):
 class EventOut(EventDB):
     id: id_type
     price: Annotated[int, Field(
-        gt=-1,
         description="Price of the event",
         example=100,
     )]
