@@ -34,7 +34,7 @@ pipeline
                 echo "This stage deploys the project"
                 sh '''. ~/.bashrc
                         conda activate eventbrite
-                        uvicorn main:app --host 0.0.0.0 --port 5000
+                        uvicorn main:app --host 0.0.0.0 --port 5000 &
                     '''
             }
         }        
