@@ -52,7 +52,7 @@ class EmailHandler:
         return html
 
     def generate_html_for_forgot_password(self, token):
-        verification_link = f"{self.host}/change-password?token={token}"
+        verification_link = f"{self.host}/login/resetpassword?token={token}"
         html = f"<p>Click the following link to reset your password:</p>" \
                f"<p><a href='{verification_link}'>{verification_link}</a></p>" \
                f"<p>The link will expire on {self.expiration_date}.</p>"
