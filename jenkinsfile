@@ -35,11 +35,5 @@ pipeline
                 sh "uvicorn main:app --host 0.0.0.0 --port 5000 &"
             }
         }        
-        stage('Report') {
-            steps {
-                echo "This stage generates a report"
-                
-            }
-        }
     }
 }
