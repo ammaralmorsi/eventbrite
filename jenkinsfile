@@ -32,7 +32,7 @@ pipeline
         stage('Deploy') {
             steps {
                 echo "This stage deploys the project"
-                sh "uvicorn main:app --host 0.0.0.0 --port 5000 &"
+                sh "uvicorn main:app --host 0.0.0.0 --port 5000"
             }
         }        
     }
