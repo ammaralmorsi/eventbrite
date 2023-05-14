@@ -2,43 +2,37 @@ pipeline
 {
     agent any
     stages { 
-    stage('Fetch code') {
+        stage('Fetch code') {
             steps {
                 git branch: 'main',
                 credentialsId: 'Elmeselhy',
                 url: 'https://github.com/ammaralmorsi/eventbrite.git'
             }
-       }
+        }
 
     
     
         stage('Build') {
             steps {
-             
-               sh '''#!/usr/bin/env bash
-                    . ~/.bashrc
-                    conda activate eventbrite
-                    pip install -r requirements.txt
-
-                    # do stuff
-                    '''
-                
-      
-                 
-                
+                sh '''#!/usr/bin/env bash
+                . ~/.bashrc
+                conda activate eventbrite
+                pip install -r requirements.txt
+                '''
             }
         }
         
         stage('Deploy') {
             steps {
-             script {
-                withEnv ( ['JENKINS_NODE_COOKIE=do_not_kill'] ) {
-                sh '''. ~/.bashrc
-                        conda activate eventbrite
-                        uvicorn main:app --host 0.0.0.0 --port 5000 &
-                    '''
-                }
-            }        
-           }
+                script {
+                    withEnv ( ['JENKINS_NODE_COOKIE=do_not_kill'] ) {
+                        sh '''. ~/.bashrc
+                                conda activate eventbrite
+                                uvicorn main:app --host 0.0.0.0 --port 5000 &
+                            '''
+                        }
+                }        
+            }
         }
+    }
 }
