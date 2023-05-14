@@ -5,7 +5,7 @@ pipeline
         stage('Fetch code') {
             steps {
                 git branch: 'main',
-                credentialsId: 'Elmeselhy',
+                credentialsId: 'backend',
                 url: 'https://github.com/ammaralmorsi/eventbrite.git'
             }
         }
