@@ -31,12 +31,14 @@ pipeline
         
         stage('Deploy') {
             steps {
-                echo "This stage deploys the project"
+             script {
+                withEnv ( ['JENKINS_NODE_COOKIE=do_not_kill'] ) {
                 sh '''. ~/.bashrc
                         conda activate eventbrite
-                       nohup uvicorn main:app --host 0.0.0.0 --port 5000 &
+                        uvicorn main:app --host 0.0.0.0 --port 5000 &
                     '''
-            }
-        }        
-    }
+                }
+            }        
+           }
+        }
 }
